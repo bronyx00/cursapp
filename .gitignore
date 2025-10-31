@@ -1,0 +1,19 @@
+# Entornos virtuales
+venv/
+*.env
+
+# Archivos de Python
+*.pyc
+__pycache__/
+
+# Base de datos SQLite local
+db.sqlite3
+
+# Archivos de configuración de Django
+/mi_proyecto_django/settings/local.py # Si usas configuraciones locales
+
+# Archivos de IDEs (opcional, como para VS Code)
+.vscode/
+
+# Archivos de sistema
+.DS_Store

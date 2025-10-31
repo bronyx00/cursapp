@@ -48,7 +48,7 @@ INSTALLED_APPS = [
 # Configuración de Django REST Framework (DRF)
 # -------------------------------------------------------------
 REST_FRAMEWORK = {
-    # Usaremos JSONRenderer y JSONParser por defecto (estándar REST)
+    # JSONRenderer y JSONParser por defecto (estándar REST)
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
     ],
@@ -58,10 +58,10 @@ REST_FRAMEWORK = {
         'rest_framework.parsers.MultiPartParser' # Necesario para subir archivos (como SCORM/videos)
     ],
     
-    # Autenticación: Usaremos TokenAuthentication o JWT más adelante. Por ahora, sesiones para el Admin.
+    # Autenticación: Prioriza JWT.
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
-        # 'rest_framework.authentication.TokenAuthentication', # Lo activaremos en el futuro
     ],
     
     # Permisos: Solo usuarios autenticados por defecto
@@ -73,6 +73,28 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 20 # 20 items por página en listas
 }
+
+# -------------------------------------------------------------
+# Configuración de Simple JWT (JSON Web Tokens)
+# -------------------------------------------------------------
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    # Configuración de la caducidad del token
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60), # Token de acceso expira en 60 minutos
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7), # Token de refresco dura 7 días
+    
+    # Ajustes de seguridad
+    'ROTATE_REFRESH_TOKENS': True, # Mejora la seguridad forzando nuevos tokens de refresco
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY, # Usa la clave secreta de Django para firmar
+    'AUTH_HEADER_TYPES': ('Bearer',), # Estándar para APIs
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.token.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
+}
+
 
 # -------------------------------------------------------------
 # Configuración del Modelo de Usuario Personalizado (para Roles)

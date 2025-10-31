@@ -17,6 +17,18 @@ class Usuario(AbstractUser):
         (ROL_ALUMNO, 'Alumno'),
     )
     
+    verificado = models.BooleanField(
+        default=False,
+        help_text="Indica si la cuenta ha sido verificada oficialmente por la plataforma."
+    )
+    
+    entidad_verificada = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="Nombre de la Universidad/Organización si aplica."
+    )
+    
     rol = models.PositiveSmallIntegerField(
         choices=ROLES_CHOICES, 
         default=ROL_ALUMNO, 

@@ -5,9 +5,15 @@ from core.models import Usuario
 # Serializer para el Instructor (para mostrar su nombre en el curso)
 class InstructorSerializer(serializers.ModelSerializer):
     """Serializer minimalista para incluir los datos del instructor en el curso."""
+    verificado = serializers.ReadOnlyField()
+    entidad_verificada = serializers.ReadOnlyField()
+    
     class Meta:
         model = Usuario
-        fields = ('id', 'first_name', 'last_name', 'username', 'bio')
+        fields = (
+            'id', 'first_name', 'last_name', 'username', 'bio',
+            'verificado', 'entidad_verificada'          
+        )
         read_only_fields = fields # Solo lectura
         
 # Lección Serializer (Nivel más interno)

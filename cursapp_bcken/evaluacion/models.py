@@ -1,6 +1,7 @@
 from django.db import models
 from core.models import Usuario
 from cursos.models import Leccion
+from django.db.models import Sum
 import uuid
 
 # -------------------------------------------------------------
@@ -103,6 +104,18 @@ class Inscripcion(models.Model):
     """
     Registrar la inscripción de un Alumno a un Curso.
     """
+    
+    # Definición de Estados de Pago
+    ESTADO_PENDIENTE = 1
+    ESTADO_PAGADO = 2
+    ESTADO_FALLIDO = 3
+    
+    ESTADOS_PAGO_CHOICHES = (
+        (ESTADO_PENDIENTE, 'Pendiente de Pago'),
+        (ESTADO_PAGADO, 'Pagado'),
+        (ESTADO_FALLIDO, 'Fallido/Cancelado'),
+    )
+    
     alumno = models.ForeignKey(
         Usuario,
         on_delete=models.CASCADE,
@@ -110,6 +123,20 @@ class Inscripcion(models.Model):
         limit_choices_to={'rol': Usuario.ROL_ALUMNO}
     )
     curso = models.ForeignKey('cursos.Curso', on_delete=models.CASCADE)
+    
+    # Campo de monetización
+    precio_pagado_usd = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        help_text="Precio en USD del curso al momento de la inscripción."
+    )
+    estado_pago = models.PositiveSmallIntegerField(
+        choices=ESTADOS_PAGO_CHOICHES,
+        default=ESTADO_PENDIENTE,
+        verbose_name="Estado de Pago"
+    )
+    referencia_pago = models.CharField(max_length=100, blank=True, null=True, unique=True)
+    
     fecha_inscripcion = models.DateTimeField(auto_now_add=True)
     completado = models.BooleanField(default=False)
     porcentaje_progreso = models.DecimalField(
@@ -129,7 +156,7 @@ class Inscripcion(models.Model):
     class Meta:
         verbose_name = "Inscripción"
         verbose_name_plural = "Inscripciones"
-        unique_together = ('alumno', 'curso') # Un alumno solo puede inscribirse una vez al mismo curso.
+        # unique_together = ('alumno', 'curso') # Un alumno solo puede inscribirse una vez al mismo curso.
         
     def __str__(self):
         return f"{self.alumno.username} inscrito en {self.curso.titulo}"
@@ -158,7 +185,7 @@ class ProgresoLeccion(models.Model):
     )
     
     completado = models.BooleanField(default=False)
-    fecha_completado = models.DateTimeField(null=False, blank=True)
+    fecha_completado = models.DateTimeField(null=True, blank=True)
     
     class Meta:
         verbose_name = "Progreso de Lección"
@@ -275,3 +302,76 @@ class InsigniaObtenida(models.Model):
     
     def __str__(self):
         return f"{self.alumno.username} obtuvo {self.insignia.nombre}"
+    
+# -------------------------------------------------------------
+# 4. Modelos de Gamificación (Puntos y Recompensas)
+# -------------------------------------------------------------
+
+class PuntosAlumno(models.Model):
+    """
+    Registra las transacciones de puntos ganados por un Alumno.
+    La suma de todas las entradas define la puntuación total del alumno.
+    """
+    alumno = models.ForeignKey(
+        Usuario,
+        on_delete=models.CASCADE,
+        related_name='puntos_ganados',
+        limit_choices_to={'rol': Usuario.ROL_ALUMNO}
+    )
+    puntos = models.IntegerField(default=0, help_text="Puntos ganados o restados")
+    motivo = models.CharField(
+        max_length=255,
+        help_text="Razón por la cual se otorgaron/restaron los puntos."
+    )
+    fecha_registro = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = "Puntos de Alumno"
+        verbose_name_plural = "Puntos de Alumnos"
+        ordering = ['-fecha_registro']
+        
+    def __str__(self):
+        return f"{self.alumno.username}: {self.puntos} puntos por {self.motivo}"
+    
+    # Propiedad para obtener la puntuación total del alumno (Para Leaderboard)
+    @classmethod
+    def obtener_puntuacion_total(cls, alumno_id):
+        """Calcula la puntuacion total de un alumno."""
+        return cls.objects.filter(alumno_id=alumno_id).aggregate(total=Sum('puntos'))['total'] or 0
+    
+class Recompensa(models.Model):
+    """
+    Define un artículo o beneficio que puede ser canjeado con puntos.
+    """
+    nombre = models.CharField(max_length=100)
+    descipcion = models.TextField()
+    costo_puntos = models.PositiveIntegerField(help_text="Costo de la recompensa en puntos.")
+    
+    class Meta:
+        verbose_name = "Recompensa"
+        verbose_name_plural = "Recompensas"
+        
+    def __str__(self):
+        return f"{self.nombre} ({self.costo_puntos} puntos)"
+    
+    
+class CanjeRecompensa(models.Model):
+    """
+    Registra el canje de una recompensa por parte de un alumno.
+    """
+    alumno = models.ForeignKey(
+        Usuario,
+        on_delete=models.CASCADE,
+        related_name='canjes_realizados',
+        limit_choices_to={'rol': Usuario.ROL_ALUMNO}
+    )
+    recompensa = models.ForeignKey(Recompensa, on_delete=models.CASCADE)
+    fecha_canje = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = "Canje de Recompensa"
+        verbose_name_plural = "Canjes de Recompensa"
+        ordering = ['-fecha_canje']
+        
+    def __str__(self):
+        return f"{self.alumno.username} canjeó {self.recompensa.nombre}"

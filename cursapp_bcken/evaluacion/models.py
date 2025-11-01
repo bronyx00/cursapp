@@ -187,6 +187,45 @@ class ProgresoLeccion(models.Model):
     completado = models.BooleanField(default=False)
     fecha_completado = models.DateTimeField(null=True, blank=True)
     
+    # cmi.core.lesson_status (Estado de la lección)
+    # Almacena el estado detallado reportado por el SCORM
+    ESTADO_SCORM_CHOICES = (
+        ('passed', 'Aprobado'),
+        ('completed', 'Completado'),
+        ('failed', 'Fallido'),
+        ('incomplete', 'Incompleto'),
+        ('browsed', 'Visto por encima'),
+        ('not attempted', 'No intenrado'),
+    )
+    estado_scorm = models.CharField(
+        max_length=20,
+        choices=ESTADO_SCORM_CHOICES,
+        default='Not attempted',
+        blank=True
+    )
+    
+    # cmi.core.score.raw (Puntuación)
+    puntuacion_scorm = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Puntuación (0-100) reportada por el SCORM"
+    )
+    
+    # cmi.suspend_data (Datos de Suspención)
+    # Campo CRÍTICO. Guarda dónde quedó el usuario en el SCORM (Ej: "página 3, video 1:20")
+    suspend_data = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Datos de suspensión del SCORM (dónde guardar)"
+    )
+    
+    # cmi.core.entry (Punto de entrada)
+    # 'ab-initio' (primera vez), 'resume' (continuar)
+    entry_point = models.CharField(max_length=10, default='ab-initio', blank=True)
+    
+        
     class Meta:
         verbose_name = "Progreso de Lección"
         verbose_name_plural = "Progresos de Lección"

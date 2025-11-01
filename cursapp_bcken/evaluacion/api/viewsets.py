@@ -4,6 +4,7 @@ from django.db.models import Sum, F
 from django.shortcuts import get_object_or_404
 from evaluacion.models import Inscripcion, PuntosAlumno
 from cursos.models import Curso
+from core.models import Usuario
 from utils.monetizacion import obtener_tasa_bcv
 from .serializers import InscripcionSerializer, InscripcionCrearSerializer, LeaderboardSerializer
 
@@ -88,14 +89,9 @@ class LeaderboardAPIView(generics.ListAPIView):
     permission_classes = [permissions.AllowAny]
     
     def get_queryset(self):
-        # Agrupa por alumno y suma los puntos
-        leaderboard = PuntosAlumno.objects.values(
-            'alumno',
-            'alumno__username',
-            'alumno__first_name',
-            'alumno__last_name'
-        ).annotate(
-            puntos_totales=Sum('puntos')
-        ).order_by('-puntos_totales') # Ordena de mayor a menor
-        
-        return leaderboard
+        # Ordena los usuarios por el campo 'xp_totales'
+        # Esto siempre será instantaneo, incluso con miles de usuarios.
+        return Usuario.objects.filter(
+            rol=Usuario.ROL_ALUMNO,
+            xp_totales__gt=0
+        ).order_by('-xp_totales')

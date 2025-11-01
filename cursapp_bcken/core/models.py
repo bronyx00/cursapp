@@ -47,6 +47,21 @@ class Usuario(AbstractUser):
         verbose_name='Comisión de la Plataforma (%)'
     )
     
+    # --- GAMIFICACIÓN ---
+    # Puntos (Moneda)
+    puntos_totales = models.PositiveIntegerField(
+        default=0,
+        db_index=True, # Indexado para consultas rápidas
+        help_text="Moneda virtual para canjear por recompensas."
+    )
+    
+    # XP (Experiencia)
+    xp_totales = models.PositiveIntegerField(
+        default=0,
+        db_index=True, # Indexado para el Leaderboard
+        help_text="Puntos de experiencia para subir de nivel."
+    )
+    
     class Meta:
         verbose_name = 'Usuario'
         verbose_name_plural = 'Usuarios'

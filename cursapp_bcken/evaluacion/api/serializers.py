@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from evaluacion.models import Inscripcion
-from cursos.models import Curso
-
+from core.models import Usuario
 class InscripcionSerializer(serializers.ModelSerializer):
     """
     Serializer para crear una nueva inscripción (Iniciar un proceso de pago)
@@ -33,12 +32,11 @@ class InscripcionCrearSerializer(serializers.ModelSerializer):
 class LeaderboardSerializer(serializers.Serializer):
     """
     Serializer especial para la tabla de calificación (Leaderboard).
-    Usa campos basados en la agregación de la base de datos.
+    Usa el modelo Usuario.
     """
-    alumno_id = serializers.IntegerField(source='alumno')
-    username = serializers.CharField(source='alumno__username')
-    full_name = serializers.SerializerMethodField()
-    puntuacion_total = serializers.IntegerField(source='puntos_totales')
+    full_name = serializers.CharField(source='get_full_name')
+    puntuacion_total = serializers.IntegerField(source='xp_totales') # Usamos XP para el Leaderboard
     
-    def get_full_name(self, obj):
-        return f"{obj['alumno__first_name']} {obj['alumno__last_name']}"
+    class Meta:
+        model = Usuario
+        fields = ('id', 'username', 'full_name', 'puntuacion_total', 'foto_perfil')

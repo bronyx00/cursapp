@@ -1,12 +1,18 @@
 from rest_framework import viewsets, permissions, status, generics
 from rest_framework.response import Response
+from rest_framework.exceptions import PermissionDenied
 from django.db.models import Sum, F
 from django.shortcuts import get_object_or_404
-from evaluacion.models import Inscripcion, PuntosAlumno
-from cursos.models import Curso
+from evaluacion.models import Inscripcion, PuntosAlumno, ProgresoLeccion
+from cursos.models import Curso, Leccion
 from core.models import Usuario
 from utils.monetizacion import obtener_tasa_bcv
-from .serializers import InscripcionSerializer, InscripcionCrearSerializer, LeaderboardSerializer
+from .serializers import (
+    InscripcionSerializer, 
+    InscripcionCrearSerializer, 
+    LeaderboardSerializer,
+    ScormProgresoSerializer
+)
 
 class InscripcionViewSet(viewsets.ModelViewSet):
     """
@@ -95,3 +101,57 @@ class LeaderboardAPIView(generics.ListAPIView):
             rol=Usuario.ROL_ALUMNO,
             xp_totales__gt=0
         ).order_by('-xp_totales')
+        
+class ScormProgresoAPIView(generics.RetrieveUpdateAPIView):
+    """
+    API Endpoint para la comunicación SCORM (LMSInitialize y LMSCommit).
+    
+    - GET (LMSInitialize):
+      Recupera el estado actual del progreso SCORM (suspend_data, estado, puntuacion).
+      
+    - PUT/PATCH (LMSCommit):
+      Guarda (Commitea) el nuevo estado SCORM enviado desde el player de Vue.js.
+    """
+    serializer_class = ScormProgresoSerializer
+    permission_classes = [permissions.IsAuthenticated] # Solo alumnos autenticados
+    lookup_field = 'leccion_pk' # Usaremos el ID del la lección desde la URL
+    
+    def get_object(self):
+        # Identificar al usuario y la lección
+        user = self.request.user
+        leccion_id = self.kwargs.get('leccion_pk')
+        leccion = get_object_or_404(Leccion, pk=leccion_id)
+        
+        # Validar Roles y Tipo de Contenido
+        if not user.es_alumno:
+            raise PermissionDenied("Solo los alumnos pueden reportar progreso SCORM.")
+        
+        if leccion.tipo_contenido != Leccion.TIPO_SCORM:
+            raise PermissionDenied("Esta lección no es de tipo SCORM.")
+        
+        # Validar Inscripción
+        # Asegura que el alumno esté inscrito y haya pagado el curso.
+        try: 
+            inscripcion = Inscripcion.objects.get(
+                alumno=user,
+                curso=leccion.modulo.curso,
+                estado_pago=Inscripcion.ESTADO_PAGADO
+            )
+        except Inscripcion.DoesNotExist:
+            raise PermissionDenied("No estás inscrito en este curso o tu pago aún está pendiente.")
+        
+        # Obtener (o Crear si es la primera vez) el registro de progreso
+        # Esto permite que la primera llamada GET (LMSInitialize) funcione
+        progreso, created = ProgresoLeccion.objects.get_or_create(
+            inscripcion=inscripcion,
+            leccion=leccion
+        )
+        
+        if leccion:
+            # Si es la primera vez, el punto de entrada es 'ab-initio' (desde el inicio)
+            progreso.entry_point = 'ab-initio'
+        else:
+            # Si ya existía, el punto de entrada es 'resume' (continuar)
+            progreso.entry_point = 'resume'
+            
+        return progreso

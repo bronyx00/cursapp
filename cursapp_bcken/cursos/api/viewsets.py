@@ -6,39 +6,57 @@ from .serializers import CursoListSerializer, CursoDetailSerializer, ModuloSeria
 from evaluacion.models import InteraccionLeccion
 
 # --- Permisos Personalizados ---
-class IsInstructorOrReadOnly(permissions.BasePermission):
-    """
-    Permite GET (lectura) a todos, pero solo permite PUT/POST/DELETE
-    si el usuario es Instructor (o Admin, ya que el admin es superusuario)
-    """
-    
-    def has_permission(self, request, view):
-        # Permite lectura (GET, HEAD, OPTIONS) a cualquiera
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        # Solo permite escritura si el usuario está autenticado y es instructor
-        return request.user.is_authenticated and request.user.es_instructor
-    
 class IsOwnerOrReadOnly(permissions.BasePermission):
     """
-    Permiso personalizado para asegurar que solo el instructor propietario
-    pueda editar o eliminar su propio curso.
+    Permiso de alto nivel para todo el contenido de 'cursos'.
+    - Permite lectura (GET) a todos.
+    - Permite CREAR (POST) solo a Instructores.
+    - Permite EDITAR/BORRAR (PUT/DELETE) solo al Instructor PROPIETARIO
     """
-    def has_object_permission(self, request, view, obj):
-        # Permite lectura (GET, HEAD, OPTIONS) a cualquiera
+    def has_permission(self, request, view):
+        # Permite lectura a cualquiera
         if request.method in permissions.SAFE_METHODS:
             return True
         
-        # Las operaciones de escritura (PUT, DELETE) solo se permite si
-        # el usuario es el instructor (propietario) del objeto (Curso/Módulo/Lección)
-        return obj.instructor == request.user
-
+        # Deniega escritura a usuarios no autenticados
+        if not request.user.is_authenticated:
+            return False
+        
+        # Permite CREAR solo si es Instructor
+        return request.user.es_instructor
+    
+    def has_object_permission(self, request, view, obj):
+        # Permite lectura a cualquiera
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        
+        # Deniega si no es instructor
+        if not request.user.es_instructor:
+            return False
+        
+        # Determinar el propietario
+        owner = None
+        if isinstance(obj, Curso):
+            # Si el objeto es un Curso, el dueño es 'instructor'
+            owner = obj.instructor
+        elif isinstance(obj, Modulo):
+            # Si el objeto es un Modulo, el dueño es 'curso.instructor'
+            owner = obj.curso.instructor
+        elif isinstance(obj, Leccion):
+            # Si el objeto es una Leccion, el dueño es 'modulo.curso.instructor'
+            owner = obj.modulo.curso.instructor
+            
+        # Permitir solo si el usuario es el propietario
+        return owner == request.user
+    
 # --- ViewSets ---
 class CursoViewSet(viewsets.ModelViewSet):
     """
-    ViewSet para listar y recuperar cursos (Catálogo) y gestionarlos (CRUD)
+    ViewSet para listar y recuperar cursos (Catálogo) y gestionarlos (CRUD).
+    - El público general solo ve cursos PUBLICADOS.
+    - El instructor propietario ve TODOS sus cursos (Borrador, Publicado, Suspendido).
     """
-    queryset = Curso.objects.filter(estado=Curso.ESTADO_PUBLICADO).order_by('-fecha_creacion')
+    queryset = Curso.objects.all().order_by('-fecha_creacion')
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly] # Lectura pública, escritura solo para Instructores.
     
     def get_serializer_class(self):
@@ -46,25 +64,37 @@ class CursoViewSet(viewsets.ModelViewSet):
         if self.action == 'list':
             return CursoListSerializer
         return CursoDetailSerializer
-    
-    # Sobreescribir el create/update para enlazar automáticamente al instructor
-    def perform_create(self, serializer):
-        if not self.request.user.es_instructor:
-            raise exceptions.PermissionDenied("Solo los instructores pueden crear cursos.")
         
+    def get_queryset(self):
+        """
+        Filtra dinámicamente los cursos visibles basado en el rol del usuario.
+        """
+        user = self.request.user
+        
+        # Si el usuario no está autenticado O no es instructor
+        if not user.is_authenticated or not user.es_instructor:
+            # Mostrar solo cursos PUBLICADOS
+            return self.queryset.filter(estado=Curso.ESTADO_PUBLICADO)
+        
+        # Si el usuario es instructor
+        # Usamos Q objects para lógica OR: (es mi curso) O (es público)
+        from django.db.models import Q
+        
+        # Mostrar cursos donde (soy el instructor) O (el curso está publicado)
+        # Esto permite al instructor ver sus borradores Y también los cursos de otros instructores.
+        return self.queryset.filter(
+            Q(instructor=user) | Q(estado=Curso.ESTADO_PUBLICADO)
+        ).distinct() # Para evitar duplicados si un curso es público y es mío
+        
+    def perform_create(self, serializer):
         # Asigna automáticamente al usuario logueado como el instructor del curso
         serializer.save(instructor=self.request.user)
         
-    # Mejorar la queryset para que los profesores solo vean sus cursos cuando esta en ESTADO_BORRADOR
-    # def get_queryset(self):
-    #     if self.request.user.is_authenticated and self.request.user.es_profesor:
-    #         return Curso.objects.filter(profesor=self.request.user).order_by('-fecha_creacion')
-    #     return Curso.objects.filter(esta_publicado=True).order_by('-fecha_creacion')
         
 class ModuloViewSet(viewsets.ModelViewSet):
     """ViewSet para la gestión de Módulos."""
     serializer_class = ModuloSerializer
-    permission_classes = [IsInstructorOrReadOnly]
+    permission_classes = [IsOwnerOrReadOnly]
     
     # Filtrar los módulos por el curso (se accede por /cursos/{curso_ud}/modulos)
     def get_queryset(self):
@@ -81,7 +111,7 @@ class ModuloViewSet(viewsets.ModelViewSet):
 class LeccionViewSet(viewsets.ModelViewSet):
     """ViewSet para la gestión de Lecciones."""
     serializer_class = LeccionSerializer
-    permission_classes = [IsInstructorOrReadOnly]
+    permission_classes = [IsOwnerOrReadOnly]
     
     # Filtrar las lecciones por el módulo (se accede por /modulos/{modulo_id}/lecciones)
     def get_queryset(self):

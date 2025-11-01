@@ -30,7 +30,7 @@ class InscripcionCrearSerializer(serializers.ModelSerializer):
         # La lógica de creación se moverá al ViewSet para obtener el usuario y el precio.
         return super().create(validated_data)
     
-class LeaderboardSerializer(serializers.Serializer):
+class LeaderboardSerializer(serializers.ModelSerializer):
     """
     Serializer especial para la tabla de calificación (Leaderboard).
     Usa el modelo Usuario.

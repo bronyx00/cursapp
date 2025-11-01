@@ -35,9 +35,9 @@ class RecomendacionAPIView(generics.ListAPIView):
         
         recomendaciones = Curso.objects.none() # QuerySet vacío inicial
         
-        if afinidades:
+        if afinidades and afinidades['leccion__modulo__curso__categoria'] is not None:
             # Recomendar 3 cursos de la categoría más afín (la primera en afinidades).
-            categoria_preferida_id = afinidades[0]['leccion__modulo__curso__categoria']
+            categoria_preferida_id = afinidades['leccion__modulo__curso__categoria']
             
             recomendaciones = Curso.objects.filter(
                 estado=Curso.ESTADO_PUBLICADO,

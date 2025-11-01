@@ -11,7 +11,7 @@ cursos_router = routers.NestedSimpleRouter(router, r'catalogo', lookup='curso')
 cursos_router.register(r'modulos', ModuloViewSet, basename='curso-modulos')
 
 # Router Anidado para Lecciones (curso/1/modulos/2/lecciones/)
-modulos_router = routers.NestedSimpleRouter(router, r'catalogo', lookup='modulo')
+modulos_router = routers.NestedSimpleRouter(cursos_router, r'modulo', lookup='modulo')
 modulos_router.register(r'lecciones', LeccionViewSet, basename='modulo-lecciones')
 
 urlpatterns = router.urls + cursos_router.urls + modulos_router.urls

@@ -56,7 +56,7 @@ class PerfilUsuarioSerializer(serializers.ModelSerializer):
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     """
     Serializer personalizado para el login (Obtener Tokens).
-    Hereda de la clase base para segurar que devuelve 'access' y refresh'.
+    Garantiza la devolución del par 'access' y 'refresh' y añade claims personalizados.
     """
     @classmethod
     def get_token(cls, user):
@@ -69,3 +69,9 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['verificado'] = user.verificado
 
         return token
+    
+    def validate(self, attrs):
+        # Llama a la validación base
+        data = super().validate(attrs)
+        
+        return data

@@ -377,7 +377,7 @@ class Recompensa(models.Model):
     Define un artículo o beneficio que puede ser canjeado con puntos.
     """
     nombre = models.CharField(max_length=100)
-    descipcion = models.TextField()
+    descripcion = models.TextField()
     costo_puntos = models.PositiveIntegerField(help_text="Costo de la recompensa en puntos.")
     
     class Meta:

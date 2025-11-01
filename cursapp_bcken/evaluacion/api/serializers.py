@@ -10,7 +10,7 @@ class InscripcionSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Inscripcion
-        field = (
+        fields = (
             'id', 'curso', 'curso_titulo', 'alumno',
             'precio_pagado_usd', 'estado_pago', 'referencia_pago',
             'fecha_inscripcion'

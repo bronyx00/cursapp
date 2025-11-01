@@ -18,7 +18,7 @@ class IsInstructorOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
         # Solo permite escritura si el usuario está autenticado y es instructor
-        return request.user.is_autenticated and request.user.es_instructor
+        return request.user.is_authenticated and request.user.es_instructor
     
 # --- ViewSets ---
 
@@ -87,27 +87,3 @@ class CategoriaViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Categoria.objects.annotate(num_cursos=Count('cursos')).order_by('nombre')
     serializer_class = CategoriaSerializer
     permission_classes = [permissions.AllowAny] # Público
-    
-class RecomendacionAPIView(generics.ListAPIView):
-    """
-    ENDPOINT DE RECOMENDACIÓN (Placeholder para el motor de IA).
-    Devuelve cursos recomendados basados en la actividad del usuario.
-    """
-    serializer_class = CursoListSerializer
-    permission_classes = [permissions.IsAuthenticated] # Solo usuarios logueados reciben recomendaciones
-    
-    def get_queryset(self):
-        user = self.request.user
-        
-        # Si el usuario es nuevo, devolver los cursos más populares/mejor valorados.
-        if not InteraccionLeccion.objects.filter(alumno=user).exists():
-            # Devuelve los 5 cursos más recientes
-            return Curso.objects.filter(estado=Curso.ESTADO_PUBLICADO).order_by('-fecha_creacion'[:5])
-        
-        # LÓGICA FUTURA DE IA (Placeholder)
-        # 1. Obtener las categorías/etiquetas favoritas del usuario (basado en InteraccionLeccion).
-        # 2. Consultar el motor de inferencia.
-        # 3. Por ahora, solo devolvemos una simulación:
-        
-        cursos_populares = Curso.objects.filter(estado=Curso.ESTADO_PUBLICADO).order_by('-precio_usd')[:5]
-        return cursos_populares

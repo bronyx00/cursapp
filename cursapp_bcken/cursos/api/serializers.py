@@ -50,17 +50,15 @@ class CursoDetailSerializer(serializers.ModelSerializer):
     modulos = ModuloSerializer(many=True, read_only=True)
     estado_display = serializers.CharField(source='get_estado_display', read_only=True)
     
-    
-    
     # Campos de recomendación
     categoria = CategoriaSerializer(read_only=True)
-    etiquetas = EtiquetaSerializer(read_only=True)
+    etiquetas = EtiquetaSerializer(many=True, read_only=True)
     
     # Añadir campo para calcular el progreso del alumno aquí
     
     class Meta:
         model = Curso
-        field = (
+        fields = (
             'id', 'titulo', 'slug', 'descripcion', 'instructor', 'precio_usd',
             'req_certificado', 'estado', 'estado_display', 'fecha_creacion', 
             'fecha_actualizacion', 'modulos', 'categoria', 'etiquetas'
@@ -74,7 +72,7 @@ class CursoListSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Curso
-        field = (
+        fields = (
             'id', 'titulo', 'slug', 'descripcion', 'instructor_nombre', 
             'precio_usd', 'estado', 'estado_display', 'num_modulos'
         )

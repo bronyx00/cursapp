@@ -4,7 +4,7 @@ from django.db.models import Sum, F
 from django.shortcuts import get_object_or_404
 from evaluacion.models import Inscripcion, PuntosAlumno
 from cursos.models import Curso
-from core.models import Usuario
+from utils.monetizacion import obtener_tasa_bcv
 from .serializers import InscripcionSerializer, InscripcionCrearSerializer, LeaderboardSerializer
 
 class InscripcionViewSet(viewsets.ModelViewSet):
@@ -54,6 +54,11 @@ class InscripcionViewSet(viewsets.ModelViewSet):
             estado_pago=Inscripcion.ESTADO_PENDIENTE
         )
         
+        # Obtener la tasa del BCV y preparar la respuesta de pago
+        tasa_bcv = obtener_tasa_bcv()
+        monto_ves = curso.precio_usd * tasa_bcv
+        
+        
         # Preparación para la Pasarela de Pago
         # Aquí se integraría la lógica para generar una URL de pago, o una factura.
         # Por ahora, devolvemos los datos para que el frontend inicie el proceso.
@@ -63,11 +68,12 @@ class InscripcionViewSet(viewsets.ModelViewSet):
             {
                 "mensaje": "Pre-inscripción creada. Continúe al pago.",
                 "inscripcion": response_serializer.data,
-                # "datos_pago": {
-                #     "tasa_bcv": obtener_tasa_bcv(), 
-                #     "monto_ves": curso.precio_usd * obtener_tasa_bcv(),
-                #     "metodos": ["Pago Movil", "Transferencia", "TDC/TDD"]
-                # }
+                "datos_pago": {
+                    "precio_usd": str(curso.precio_usd),
+                    "tasa_bcv": str(tasa_bcv),
+                    "monto_ves": str(round(monto_ves, 2)),
+                    "metodos": ["Pago Movil", "Transferencia", "TDC/TDD"]
+                }
             },
             status=status.HTTP_201_CREATED
         )

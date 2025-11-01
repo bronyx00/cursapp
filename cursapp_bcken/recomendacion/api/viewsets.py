@@ -16,32 +16,44 @@ class RecomendacionAPIView(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         
-        # Caso Cold Start (Usuario Nuevo) o Sin Interacciones
-        # Si el usuario no tiene historial, recomendaremos los cursos más populares o recientes.
-        if not InteraccionLeccion.objects.filter(alumno=user).exists():
-            # Recomendación por popularidad (simulada por mayor número de inscripciones en un futuro)
-            # Por ahora, más recientes:
-            return Curso.objects.filter(estado=Curso.ESTADO_PUBLICADO).order_by('-fecha_creacion')[:5]
+        # Identificar cursos ya inscritos (para excluirlos)
+        cursos_inscritos_ids = Inscripcion.objects.filter(
+            alumno=user,
+            estado_pago=Inscripcion.ESTADO_PAGADO
+        ).values_list('curso_id', flat=True)
         
-        # LÓGICA DE INFERENCIA (Filtración Basada en Comportamiento)
-        
-        # Aquí se conectará el modelo de IA o Machine Learning
-        
-        # SIMULACION: encuentra la categoria favorita del usuario
-        categoria_favorita_id = InteraccionLeccion.objects.filter(alumno=user, tasa_interes=1).values_list(
-            'leccion__modulo__curso__categoria', flat=True
+        # Análisis de Comportamiento
+        # Buscar la categoría donde el usuario tuvo la mayor interacción (tasa_interes > 0)
+        afinidades = InteraccionLeccion.objects.filter(
+            alumno=user,
+            tasa_interes__gt=0 # Solo interacciones positivas/completadas
+        ).values(
+            'leccion__modulo__curso__categoria' # Agrupar por la categoría del curso
         ).annotate(
-            count=Count('leccion__modulo__curso__categoria')
-        ).order_by('-count').first()
+            total_interacciones=Count('leccion__modulo__curso__categoria')
+        ).order_by('-total_interacciones').first()
         
-        if categoria_favorita_id:
-            # Recomendamos otros cursos de su categoría favorita
-            return Curso.objects.filter(
-                estado=Curso.ESTADO_PUBLICADO,
-                categoria_id=categoria_favorita_id
-            ).exclude(
-                inscripcion__alumno=user,
-                inscripcion__estado_pago=Inscripcion.ESTADO_PAGADO
-            ).order_by('?')[:5] # '?' = orden aleatorio para simular variedad
+        recomendaciones = Curso.objects.none() # QuerySet vacío inicial
+        
+        if afinidades:
+            # Recomendar 3 cursos de la categoría más afín (la primera en afinidades).
+            categoria_preferida_id = afinidades[0]['leccion__modulo__curso__categoria']
             
-        return Curso.objects.filter(estado=Curso.ESTADO_PUBLICADO).order_by('-fecha_creacion')[:5]
+            recomendaciones = Curso.objects.filter(
+                estado=Curso.ESTADO_PUBLICADO,
+                categoria_id=categoria_preferida_id
+            ).exclude(
+                id__in=cursos_inscritos_ids # Excluir cursos ya comprados
+            ).order_by('?')[:3]
+            
+            # Si se encuentran cursos, devolver estas 3 recomendaciones.
+            
+            if recomendaciones.exists():
+                return recomendaciones
+            
+        # Cold Start: Si no hay cursos en la categoría afín, devuelve los cursos más recientes
+        return Curso.objects.filter(
+            estado=Curso.ESTADO_PUBLICADO
+        ).exclude(
+            id__in=cursos_inscritos_ids
+        ).order_by('-fecha_creacion')[:5]

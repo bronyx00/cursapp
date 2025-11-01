@@ -43,8 +43,14 @@ INSTALLED_APPS = [
     'evaluacion.apps.EvaluacionConfig',
     'api.apps.ApiConfig',
     'recomendacion.apps.RecomendacionConfig',
-    
 ]
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'tasa-bcv-cache',
+    }
+}
 
 # -------------------------------------------------------------
 # Configuración de Django REST Framework (DRF)

@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions, mixins, generics
+from rest_framework import viewsets, permissions, exceptions
 from rest_framework.decorators import action
 from django.db.models import Count
 from cursos.models import Curso, Modulo, Leccion, Categoria
@@ -6,7 +6,6 @@ from .serializers import CursoListSerializer, CursoDetailSerializer, ModuloSeria
 from evaluacion.models import InteraccionLeccion
 
 # --- Permisos Personalizados ---
-
 class IsInstructorOrReadOnly(permissions.BasePermission):
     """
     Permite GET (lectura) a todos, pero solo permite PUT/POST/DELETE
@@ -20,14 +19,27 @@ class IsInstructorOrReadOnly(permissions.BasePermission):
         # Solo permite escritura si el usuario está autenticado y es instructor
         return request.user.is_authenticated and request.user.es_instructor
     
-# --- ViewSets ---
+class IsOwnerOrReadOnly(permissions.BasePermission):
+    """
+    Permiso personalizado para asegurar que solo el instructor propietario
+    pueda editar o eliminar su propio curso.
+    """
+    def has_object_permission(self, request, view, obj):
+        # Permite lectura (GET, HEAD, OPTIONS) a cualquiera
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        
+        # Las operaciones de escritura (PUT, DELETE) solo se permite si
+        # el usuario es el instructor (propietario) del objeto (Curso/Módulo/Lección)
+        return obj.instructor == request.user
 
+# --- ViewSets ---
 class CursoViewSet(viewsets.ModelViewSet):
     """
     ViewSet para listar y recuperar cursos (Catálogo) y gestionarlos (CRUD)
     """
     queryset = Curso.objects.filter(estado=Curso.ESTADO_PUBLICADO).order_by('-fecha_creacion')
-    permission_classes = [IsInstructorOrReadOnly] # Lectura pública, escritura solo para Instructores.
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly] # Lectura pública, escritura solo para Instructores.
     
     def get_serializer_class(self):
         """Alterna entre el serializer de listado y el de detalle."""
@@ -37,6 +49,9 @@ class CursoViewSet(viewsets.ModelViewSet):
     
     # Sobreescribir el create/update para enlazar automáticamente al instructor
     def perform_create(self, serializer):
+        if not self.request.user.es_instructor:
+            raise exceptions.PermissionDenied("Solo los instructores pueden crear cursos.")
+        
         # Asigna automáticamente al usuario logueado como el instructor del curso
         serializer.save(instructor=self.request.user)
         

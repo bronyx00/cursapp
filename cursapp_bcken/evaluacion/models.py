@@ -221,6 +221,39 @@ class IntentoCuestionario(models.Model):
     def __str__(self):
         return f"Intento de {self.cuestionario.titulo} - Puntuación: {self.puntuacion_obtenida}"
     
+class InteraccionLeccion(models.Model):
+    """
+    Registra el historial de visualización y 'tasa implícita' para alimentar
+    el motor de recomendación.
+    """
+    alumno = models.ForeignKey(
+        Usuario,
+        on_delete=models.CASCADE,
+        related_name='interacciones'
+    )
+    leccion = models.ForeignKey(
+        Leccion,
+        on_delete=models.CASCADE,
+        related_name='interacciones'
+    )
+    
+    # Data para Recomendación
+    # Tasa implícita: cuánto tiempo retuvo la lección el interés.
+    tasa_interes = models.PositiveSmallIntegerField(
+        default=0,
+        help_text="Tasa de interés implícita"
+    )
+    
+    ultima_vista = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Interacción de Lección"
+        verbose_name_plural = "Interacciones de Lección"
+        # Solo un registro de interacción por alumno y lección.
+        unique_together = ('alumno', 'leccion')
+        
+    def __str__(self):
+        return f"{self.alumno.username} interactuó con {self.leccion.titulo}"
 
 # -------------------------------------------------------------
 # 3. Modelos de Credenciales (Certificados e Insignias)

@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     'cursos.apps.CursosConfig',
     'evaluacion.apps.EvaluacionConfig',
     'api.apps.ApiConfig',
+    'recomendacion.apps.RecomendacionConfig',
+    
 ]
 
 # -------------------------------------------------------------
@@ -91,7 +93,9 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',), # Estándar para APIs
     'USER_ID_FIELD': 'id',
     'USER_ID_CLAIM': 'user_id',
-    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.token.AccessToken',),
+    'AUTH_TOKEN_CLASSES': (
+        'rest_framework_simplejwt.tokens.AccessToken',
+    ),
     'TOKEN_TYPE_CLAIM': 'token_type',
 }
 

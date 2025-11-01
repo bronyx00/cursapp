@@ -1,0 +1,2 @@
+from rest_framework import serializers
+from cursos.api.serializers import CursoListSerializer

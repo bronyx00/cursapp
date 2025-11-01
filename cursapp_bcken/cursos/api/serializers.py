@@ -1,6 +1,18 @@
 from rest_framework import serializers
-from cursos.models import Curso, Modulo, Leccion
+from cursos.models import Curso, Modulo, Leccion, Categoria, Etiqueta
 from core.models import Usuario
+
+# Serializer para Categoría
+class CategoriaSerializer(serializers.ModelSerializer):
+    class Meta: 
+        model = Categoria
+        fields = ('id', 'nombre', 'slug', 'descripcion')
+        
+# Serializer para Etiqueta
+class EtiquetaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Etiqueta
+        fields = ('id', 'nombre', 'slug')
 
 # Serializer para el Instructor (para mostrar su nombre en el curso)
 class InstructorSerializer(serializers.ModelSerializer):
@@ -35,11 +47,14 @@ class ModuloSerializer(serializers.ModelSerializer):
 # Curso Detail Serializer (Vista detallada de un curso: invluye módulos)
 class CursoDetailSerializer(serializers.ModelSerializer):
     instructor = InstructorSerializer(read_only=True)
-    # Serializer anidado para mostrar la estructura completa del curso
     modulos = ModuloSerializer(many=True, read_only=True)
-    
-    # Campo para obtener el nombre legible del estado
     estado_display = serializers.CharField(source='get_estado_display', read_only=True)
+    
+    
+    
+    # Campos de recomendación
+    categoria = CategoriaSerializer(read_only=True)
+    etiquetas = EtiquetaSerializer(read_only=True)
     
     # Añadir campo para calcular el progreso del alumno aquí
     
@@ -47,7 +62,8 @@ class CursoDetailSerializer(serializers.ModelSerializer):
         model = Curso
         field = (
             'id', 'titulo', 'slug', 'descripcion', 'instructor', 'precio_usd',
-            'req_certificado', 'estado', 'estado_display', 'fecha_creacion', 'fecha_actualizacion', 'modulos'
+            'req_certificado', 'estado', 'estado_display', 'fecha_creacion', 
+            'fecha_actualizacion', 'modulos', 'categoria', 'etiquetas'
         )
         
 # Curso List Serializer (Vista de listado: minimalista y rápido)

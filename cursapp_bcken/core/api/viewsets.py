@@ -1,7 +1,8 @@
 from rest_framework import generics, permissions
+from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.response import Response
 from core.models import Usuario
-from .serializers import RegistroUsuarioSerializer, PerfilUsuarioSerializer
+from .serializers import RegistroUsuarioSerializer, PerfilUsuarioSerializer, MyTokenObtainPairSerializer
 
 class RegistroUsuarioAPIView(generics.CreateAPIView):
     """
@@ -29,3 +30,10 @@ class PerfilUsuarioAPIView(generics.RetrieveUpdateAPIView):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
+    
+class MyTokenObtainPairView(TokenObtainPairView):
+    """
+    Vista personalizada de Login que utiliza nuestro serializador personalizado.
+    Esto asegura que la respuesta devuelva ambos tokens (access y refresh).
+    """
+    serializer_class = MyTokenObtainPairSerializer

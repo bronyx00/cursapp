@@ -1,6 +1,38 @@
 from django.db import models
 from core.models import Usuario
 
+class Categoria(models.Model):
+    """
+    Categorías principales para clasificar los cursos (Ej: Python, Diseño Gráfico, Marketing).
+    Usado para recomendación basada en contenido.
+    """
+    nombre = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=100, unique=True)
+    descripcion = models.TextField(blank=True, null=True)
+    
+    class Meta:
+        verbose_name = "Categoría"
+        verbose_name_plural = "Categorías"
+    
+    def __str__(self):
+        return self.nombre
+    
+class Etiqueta(models.Model):
+    """
+    Etiquetas para granularidad y filtrado fino (Ej: REST API, VueJS).
+    Usado par recomendación basada en contenido.
+    """
+    nombre = models.CharField(max_length=50, unique=True)
+    slug = models.SlugField(max_length=50, unique=True)
+    
+    class Meta:
+        verbose_name = "Etiqueta"
+        verbose_name_plural = "Etiquetas"
+        
+    def __str__(self):
+        return self.nombre
+    
+
 class Curso(models.Model):
     """
     Representa un curso en el marketplace.
@@ -20,6 +52,22 @@ class Curso(models.Model):
     titulo = models.CharField(max_length=200, unique=True)
     slug = models.SlugField(max_length=255, unique=True, help_text='URL amigable')
     descripcion = models.TextField(max_length=500)
+    
+    # Relaciones para Recomendación Basada en Contenido
+    categoria = models.ForeignKey(
+        Categoria,
+        on_delete=models.SET_NULL,
+        related_name='cursos',
+        null=True,
+        blank=True,
+        help_text='Clasificación principal del curso.'
+    )
+    etiquetas = models.ManyToManyField(
+        Etiqueta,
+        related_name='cursos',
+        blank=True,
+        help_text='Palabras claves para búsqueda y recomendación.'
+    )
     
     # Relación con el instructor
     instructor = models.ForeignKey(
@@ -111,12 +159,4 @@ class Leccion(models.Model):
         
     def __str__(self):
         return f"Lección {self.orden}: {self.titulo}"
-    
-class Categoria(models.Model):
-    """Para organizar cursos (IA y Navegación)."""
-    nombre = models.CharField(max_length=100, unique=True)
-    slug = models.SlugField(unique=True)
-    
-    def __str__(self):
-        return self.nombre
     

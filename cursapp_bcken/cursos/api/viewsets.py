@@ -1,6 +1,9 @@
-from rest_framework import viewsets, permissions
-from cursos.models import Curso, Modulo, Leccion
-from .serializers import CursoListSerializer, CursoDetailSerializer, ModuloSerializer, LeccionSerializer
+from rest_framework import viewsets, permissions, mixins, generics
+from rest_framework.decorators import action
+from django.db.models import Count
+from cursos.models import Curso, Modulo, Leccion, Categoria
+from .serializers import CursoListSerializer, CursoDetailSerializer, ModuloSerializer, LeccionSerializer, CategoriaSerializer
+from evaluacion.models import InteraccionLeccion
 
 # --- Permisos Personalizados ---
 
@@ -76,3 +79,35 @@ class LeccionViewSet(viewsets.ModelViewSet):
     # def perform_create(self, serializer):
     #     # Lógica compleja de asignación a un módulo existente
     #     pass
+    
+class CategoriaViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    ViewSet para listar y recuperar Categorías. Solo lectura
+    """
+    queryset = Categoria.objects.annotate(num_cursos=Count('cursos')).order_by('nombre')
+    serializer_class = CategoriaSerializer
+    permission_classes = [permissions.AllowAny] # Público
+    
+class RecomendacionAPIView(generics.ListAPIView):
+    """
+    ENDPOINT DE RECOMENDACIÓN (Placeholder para el motor de IA).
+    Devuelve cursos recomendados basados en la actividad del usuario.
+    """
+    serializer_class = CursoListSerializer
+    permission_classes = [permissions.IsAuthenticated] # Solo usuarios logueados reciben recomendaciones
+    
+    def get_queryset(self):
+        user = self.request.user
+        
+        # Si el usuario es nuevo, devolver los cursos más populares/mejor valorados.
+        if not InteraccionLeccion.objects.filter(alumno=user).exists():
+            # Devuelve los 5 cursos más recientes
+            return Curso.objects.filter(estado=Curso.ESTADO_PUBLICADO).order_by('-fecha_creacion'[:5])
+        
+        # LÓGICA FUTURA DE IA (Placeholder)
+        # 1. Obtener las categorías/etiquetas favoritas del usuario (basado en InteraccionLeccion).
+        # 2. Consultar el motor de inferencia.
+        # 3. Por ahora, solo devolvemos una simulación:
+        
+        cursos_populares = Curso.objects.filter(estado=Curso.ESTADO_PUBLICADO).order_by('-precio_usd')[:5]
+        return cursos_populares

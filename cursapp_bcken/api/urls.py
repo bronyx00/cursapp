@@ -9,4 +9,7 @@ urlpatterns = [
     
     # Rutas de evaluación progreso y matriculación (Inscripción, Exámenes, Certificados)
     path('evaluacion/', include('evaluacion.api.urls')),
+    
+    # Ruta para las recomendaciones del usuario
+    path('recomendacion/', include('recomendacion.api.urls')),
 ]

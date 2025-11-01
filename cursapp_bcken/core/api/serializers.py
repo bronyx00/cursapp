@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from core.models import Usuario
 
 class RegistroUsuarioSerializer(serializers.ModelSerializer):
@@ -28,8 +29,8 @@ class RegistroUsuarioSerializer(serializers.ModelSerializer):
             username=validate_data["username"],
             email=validate_data["email"],
             password=validate_data["password"],
-            first_name=validate_data.get["first_name", ''],
-            last_name=validate_data.get["last_name", ''],
+            first_name=validate_data.get("first_name", ''),
+            last_name=validate_data.get("last_name", ''),
             rol=validate_data.get('rol', Usuario.ROL_ALUMNO) # Por defecto, Alumno
         )
         return user
@@ -52,4 +53,19 @@ class PerfilUsuarioSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ('username', 'rol', 'email', 'verificado', 'entidad_verificada') # No se puede cambiar después del registro
         
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """
+    Serializer personalizado para el login (Obtener Tokens).
+    Hereda de la clase base para segurar que devuelve 'access' y refresh'.
+    """
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
         
+        # Añadimos datos extra del usuario (claims) al payload del token
+        token['username'] = user.username
+        token['rol'] = user.rol
+        token['rol_display'] = user.get_rol_display()
+        token['verificado'] = user.verificado
+
+        return token

@@ -2,6 +2,7 @@ from django.db import models
 from core.models import Usuario
 from cursos.models import Leccion
 from django.db.models import Sum
+from django.core.validators import MinValueValidator, MaxValueValidator
 import uuid
 
 # -------------------------------------------------------------
@@ -447,3 +448,71 @@ class CanjeRecompensa(models.Model):
         
     def __str__(self):
         return f"{self.alumno.username} canjeó {self.recompensa.nombre}"
+    
+# -------------------------------------------------------------
+# 5. Modelo de Reseñas y Calificaciones Multifacéticas
+# -------------------------------------------------------------
+
+class Resena(models.Model):
+    """
+    Una reseña multifacética dejada por un alumno.
+    Vinculada a la Inscripción para asegurar que solo alumnos pagos califiquen.
+    """
+    # Votación de 1 a 5 estrellas
+    STAR_CHOICES = [
+        (1, '1 Estrella'),
+        (2, '2 Estrellas'),
+        (3, '3 Estrellas'),
+        (4, '4 Estrellas'),
+        (5, '5 Estrellas'),
+    ]
+    
+    # 1 reseña por inscripción
+    inscripcion = models.OneToOneField(
+        Inscripcion,
+        on_delete=models.CASCADE,
+        related_name='reseña',
+        help_text="Inscripción (compra) asociada a esta reseña."
+    )
+    
+    # Comentario cualitativo
+    comentario = models.TextField(blank=True, null=True)
+    
+    # --- Calificaciones Específicas (Multifacéticas) ---
+    calificacion_general = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        choices=STAR_CHOICES
+    )
+    calificacion_calidad_contenido = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        choices=STAR_CHOICES,
+        help_text="Calidad de la información y materiales."
+    )
+    calificacion_claridad_explicacion = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        choices=STAR_CHOICES,
+        help_text="Qué tan bien explica el instructor."
+    )
+    calificacion_utilidad_practica = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        choices=STAR_CHOICES,
+        help_text="Qué tan útil o entretenido fue el curso."
+    )
+    calificacion_soporte_instructor = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        choices=STAR_CHOICES,
+        help_text="Rapidez y calidad de respuesta del instructor."
+    )
+    
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_actualizacion = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Reseña"
+        verbose_name_plural = "Reseñas"
+        ordering = ['-fecha_creacion']
+        unique_together = ('inscripcion',) # Asegura que la inscripción sea única
+        
+    def __str__(self):
+        return f"Reseña de {self.inscripcion.alumno.username} para {self.inscripcion.curso.titulo}"
+    

@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
 from django.db.models import Sum, F
 from django.shortcuts import get_object_or_404
-from evaluacion.models import Inscripcion, PuntosAlumno, ProgresoLeccion
+from evaluacion.models import Inscripcion, PuntosAlumno, ProgresoLeccion, Resena
 from cursos.models import Curso, Leccion
 from core.models import Usuario
 from utils.monetizacion import obtener_tasa_bcv
@@ -11,8 +11,22 @@ from .serializers import (
     InscripcionSerializer, 
     InscripcionCrearSerializer, 
     LeaderboardSerializer,
-    ScormProgresoSerializer
+    ScormProgresoSerializer,
+    ResenaSerializer
 )
+
+# --- PERMISOS PERSONALIZADOS ---
+class IsOwnerOfResenaOrReadOnly(permissions.BasePermission):
+    """
+    Permiso para que solo el alumno que escribió la reseña pueda
+    editarla o borrarla.
+    """
+    def has_object_permission(self, request, view, obj):
+        # Permite lectura (GET) a todos
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        # Permite escritura solo si es el dueño de la inscripción
+        return obj.inscripcion.alumno == request.user
 
 class InscripcionViewSet(viewsets.ModelViewSet):
     """
@@ -155,3 +169,24 @@ class ScormProgresoAPIView(generics.RetrieveUpdateAPIView):
             progreso.entry_point = 'resume'
             
         return progreso
+    
+class ResenaViewSet(viewsets.ModelViewSet):
+    """
+    API para gestionar Reseñas.
+    - Anidada bajo 'cursos' para listar reseñas de un curso.
+    - Permite a alumnos inscritos crear
+    - Permite a alumnos propietarios editar o borrar.
+    """
+    serializer_class = ResenaSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOfResenaOrReadOnly]
+    
+    def get_queryset(self):
+        # Filtra las reseñas basadas en el curso_pk de la URL
+        curso_pk = self.kwargs.get('curso_pk')
+        if curso_pk:
+            return Resena.objects.filter(inscripcion__curso_id=curso_pk).order_by('-fecha_creacion')
+        return Resena.objects.none() # No mostrar todas las reseñas globalmente
+    
+    def perform_create(self, serializer):
+        # El serializador ya valida la propiedad de la inscripción
+        serializer.save()

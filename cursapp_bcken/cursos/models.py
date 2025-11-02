@@ -90,8 +90,18 @@ class Curso(models.Model):
     # Credenciales
     req_certificado = models.BooleanField(default=False)
     
-    # Estadi del curso
+    # Estado del curso
     estado = models.PositiveSmallIntegerField(choices=ESTADOS_CHOICES, default=ESTADO_BORRADOR)
+    
+    total_resenas = models.PositiveIntegerField(default=0)
+    
+    # Promedios de las reseñas
+    promedio_calificacion_general = models.DecimalField(max_digits=3, decimal_places=2, default=0.00)
+    promedio_calidad_contenido = models.DecimalField(max_digits=3, decimal_places=2, default=0.00)
+    promedio_claridad_explicacion = models.DecimalField(max_digits=3, decimal_places=2, default=0.00)
+    promedio_utilidad_practica = models.DecimalField(max_digits=3, decimal_places=2, default=0.00)
+    promedio_soporte_instructor = models.DecimalField(max_digits=3, decimal_places=2, default=0.00)
+    
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_actualizacion = models.DateTimeField(auto_now=True)
     

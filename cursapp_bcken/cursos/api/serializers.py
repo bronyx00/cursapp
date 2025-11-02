@@ -61,7 +61,14 @@ class CursoDetailSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'titulo', 'slug', 'descripcion', 'instructor', 'precio_usd',
             'req_certificado', 'estado', 'estado_display', 'fecha_creacion', 
-            'fecha_actualizacion', 'modulos', 'categoria', 'etiquetas'
+            'fecha_actualizacion', 'modulos', 'categoria', 'etiquetas',
+            # Campos de Calificaiones
+            'total_resenas',
+            'promedio_calificaciono_general',
+            'promedio_calidad_contenido',
+            'promedio_claridad_explicacion',
+            'promedio_utilidad_practica',
+            'promedio_soporte_instructor'
         )
         
 # Curso List Serializer (Vista de listado: minimalista y rápido)
@@ -69,12 +76,15 @@ class CursoListSerializer(serializers.ModelSerializer):
     instructor_nombre = serializers.CharField(source='instructor.get_full_name', read_only=True)
     num_modulos = serializers.SerializerMethodField()
     estado_display = serializers.CharField(source='get_estado_display', read_only=True)
+    promedio_calificacion_general = serializers.DecimalField(max_digits=3, decimal_places=2, read_only=True)
+    total_resenas = serializers.IntegerField(read_only=True)
     
     class Meta:
         model = Curso
         fields = (
             'id', 'titulo', 'slug', 'descripcion', 'instructor_nombre', 
-            'precio_usd', 'estado', 'estado_display', 'num_modulos'
+            'precio_usd', 'estado', 'estado_display', 'num_modulos',
+            'promedio_calificacion_general', 'total_resenas'
         )
         
     # Método para calcular el número de módulos eficientemente

@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from evaluacion.models import Inscripcion, ProgresoLeccion
+from evaluacion.models import Inscripcion, ProgresoLeccion, Resena
+from core.api.serializers import PerfilUsuarioSerializer
 from core.models import Usuario
 
 class InscripcionSerializer(serializers.ModelSerializer):
@@ -62,3 +63,50 @@ class ScormProgresoSerializer(serializers.ModelSerializer):
             'completado'
         )
         read_only_fields = ('id', 'leccion')
+        
+class ResenaSerializer(serializers.ModelSerializer):
+    """
+    Serializer para mostrar y crear reseñas multifacéticas.
+    """
+    # Mostrar quién escribió la reseña (solo lectura)
+    alumno = PerfilUsuarioSerializer(source='inscripcion.alumno', read_only=True)
+    
+    # Campo para que el usuario envíe el ID de la inscripción
+    inscripcion_id = serializers.PrimaryKeyRelatedField(
+        queryset=Inscripcion.objects.all(),
+        source='inscripcion',
+        write_only=True
+    )
+    
+    class Meta:
+        model = Resena
+        fields = (
+            'id',
+            'inscripcion_id', # Para escribir
+            'alumno', # Para leer
+            'comentario',
+            'calificacion_general',
+            'calificacion_calidad_contenido',
+            'calificacion_claridad_explicacion',
+            'calificacion_utilidad_practica',
+            'calificacion_soporte_instructor',
+            'fecha_creacion',
+        )
+        read_only_fields = ('id', 'fecha_creacion', 'alumno')
+        
+    def validate_inscripcion_id(self, inscripcion):
+        """
+        Asegura que el usuario que postea es el dueño de la inscripción.
+        Asegura que el curso esté pagado.
+        """
+        request = self.context.get('request')
+        if not request:
+            raise serializers.ValidationError("Contexto de request no disponible.")
+        if inscripcion.alumno != request.user:
+            raise serializers.ValidationError("No puedes dejar una reseña para una inscripción que no te pertenece.")
+        if inscripcion.estado_pago != Inscripcion.ESTADO_PAGADO:
+            raise serializers.ValidationError("Solo puedes dejar reseñas de cursos que hayas pagado.")
+        if Resena.objects.filter(inscripcion=inscripcion).exists():
+            raise serializers.ValidationError("Ya has enviado una reseña para este curso.")
+        
+        return inscripcion

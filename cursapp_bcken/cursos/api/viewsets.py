@@ -1,8 +1,8 @@
 from rest_framework import viewsets, permissions, exceptions
 from rest_framework.decorators import action
 from django.db.models import Count
-from cursos.models import Curso, Modulo, Leccion, Categoria
-from .serializers import CursoListSerializer, CursoDetailSerializer, ModuloSerializer, LeccionSerializer, CategoriaSerializer
+from cursos.models import Curso, Modulo, Leccion, Categoria, Cupon
+from .serializers import CursoListSerializer, CursoDetailSerializer, ModuloSerializer, LeccionSerializer, CategoriaSerializer, CuponSerializer
 from evaluacion.models import InteraccionLeccion
 
 # --- Permisos Personalizados ---
@@ -129,3 +129,19 @@ class CategoriaViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Categoria.objects.annotate(num_cursos=Count('cursos')).order_by('nombre')
     serializer_class = CategoriaSerializer
     permission_classes = [permissions.AllowAny] # Público
+
+class CuponViewSet(viewsets.ModelViewSet):
+    """
+    API para que los Instructores gestionen sus propios Cupones.
+    Solo pueden ver/editar/crear cupones que ellos mismos crearon.
+    """
+    serializer_class = CuponSerializer
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
+    
+    def get_queryset(self):
+        # Un instructor solo ve sus propios cupones
+        return Cupon.objects.filter(instructor=self.request.user)
+    
+    def perform_create(self, serializer):
+        # Asigna automáticamente al instructor que lo crea
+        serializer.save(instructor=self.request.user)

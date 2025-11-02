@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from cursos.models import Curso, Modulo, Leccion, Categoria, Etiqueta
+from cursos.models import Curso, Modulo, Leccion, Categoria, Etiqueta, Cupon
 from core.models import Usuario
 
 # Serializer para Categoría
@@ -90,3 +90,28 @@ class CursoListSerializer(serializers.ModelSerializer):
     # Método para calcular el número de módulos eficientemente
     def get_num_modulos(self, obj):
         return obj.modulos.count()
+    
+class CuponSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Cupon
+        fields = (
+            'id', 'codigo', 'curso', 'porcentaje_descuento',
+            'fecha_expiracion', 'usos_maximos', 'usos_actuales'
+        )
+        read_only_fields = ("usos_actuales",)
+        
+    def validate_cursos(self, cursos):
+        """
+        Validación: Un instructor solo puede crear cupones
+        para cursos que le pertenecen.
+        """
+        request = self.context.get('request')
+        if not request: return cursos # No se puede validar sin request
+        
+        for curso in cursos:
+            if curso.instructor != request.user:
+                raise serializers.ValidationError(
+                    f"No puedes crear un cupón para el curso '{curso.titulo}', "
+                    "ya que no te pertenece"
+                )
+        return cursos

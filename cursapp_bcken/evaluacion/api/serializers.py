@@ -23,9 +23,15 @@ class InscripcionCrearSerializer(serializers.ModelSerializer):
     Serializer simplicado solo para la creación.
     El alumno solo necesita enviar el ID del curso.
     """
+    codigo_cupon = serializers.CharField(
+        max_length=50,
+        required=False,
+        allow_blank=True,
+        write_only=True
+    )
     class Meta:
         model = Inscripcion
-        fields = ('curso',)
+        fields = ('curso', 'codigo_cupon')
         
     def create(self, validated_data):
         # La lógica de creación se moverá al ViewSet para obtener el usuario y el precio.

@@ -1,8 +1,9 @@
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
-from .models import ProgresoLeccion, IntentoCuestionario, PuntosAlumno, Resena
+from .models import ProgresoLeccion, IntentoCuestionario, PuntosAlumno, Resena, Inscripcion, Transaccion
 from django.db.models import Avg, Count
 from core.models import Usuario
+from decimal import Decimal
 
 @receiver(post_save, sender=ProgresoLeccion)
 def otorgar_xp_por_leccion(sender, instance, created, **kargs):
@@ -95,3 +96,37 @@ def actualizar_promedios_on_delete(sender, instance, **kargs):
     Cuando una Reseña se elimina, recalcula los promedios del curso.
     """
     recalcular_calificaciones_curso(instance.inscripcion.curso.id)
+    
+@receiver(post_save, sender=Inscripcion)
+def crear_transaccion_post_inscripcion(sender, instance, created, **kwargs):
+    """
+    Crea un registro de Transacción cuando una Inscripción se marca como PAGADA.
+    Esto ocurre después de que la pasarela de pago confirma la compra.
+    """
+    # Si la inscripción está PAGADA y (es nueva O cambió de estado)
+    if instance.estado_pago == Inscripcion.ESTADO_PAGADO:
+        # Verificar si ya existe una transacción para evitar duplicados
+        if hasattr(instance, 'transaccion'):
+            return # La transacción ya existe, no hacer nada
+        
+        # Obtener datos para el cálculo
+        monto_total = instance.precio_pagado_usd
+        instructor = instance.curso.instructor
+        
+        # Obtener comisión (del perfil del instructor)
+        comision_porcentaje = instructor.comision if instructor else Decimal('100.00') # 100% Si no hay instructor
+        comision_decimal = comision_porcentaje / Decimal('100.00')
+        
+        # Calcular montos
+        comision_plataforma = monto_total * comision_decimal
+        monto_instructor = monto_total - comision_plataforma
+        
+        # Crear la Transacción
+        Transaccion.objects.create(
+            inscripcion=instance,
+            monto_total_usd=monto_total,
+            comision_plataforma_usd=comision_plataforma,
+            monto_instructor_usd=monto_instructor,
+            comision_aplicada_porcentaje=comision_porcentaje,
+            estado_pago_instructor=Transaccion.ESTADO_PENDIENTE
+        )

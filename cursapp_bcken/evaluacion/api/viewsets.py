@@ -1,10 +1,10 @@
 from rest_framework import viewsets, permissions, status, generics
 from rest_framework.response import Response
-from rest_framework.exceptions import PermissionDenied
-from django.db.models import Sum, F
+from rest_framework.exceptions import PermissionDenied, ValidationError
+from django.db.models import Sum, F, Q, DecimalField
 from django.shortcuts import get_object_or_404
-from evaluacion.models import Inscripcion, PuntosAlumno, ProgresoLeccion, Resena
-from cursos.models import Curso, Leccion
+from evaluacion.models import Inscripcion, PuntosAlumno, ProgresoLeccion, Resena, Transaccion
+from cursos.models import Curso, Leccion, Cupon
 from core.models import Usuario
 from utils.monetizacion import obtener_tasa_bcv
 from .serializers import (
@@ -56,6 +56,7 @@ class InscripcionViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         
         curso_id = serializer.validated_data['curso'].id
+        codigo_cupon = serializer.validated_data.get('codigo-cupon')
         alumno = request.user
         
         # Verificación de preexistencia
@@ -67,6 +68,32 @@ class InscripcionViewSet(viewsets.ModelViewSet):
             
         curso = get_object_or_404(Curso, pk=curso_id, estado=Curso.ESTADO_PUBLICADO)
         
+        # Lógica de Cupones y Cálculo de Precio
+        precio_final = curso.precio_usd
+        cupon_aplicado = None
+        
+        if codigo_cupon:
+            try:
+                cupon = Cupon.objects.get(codigo__iexact=codigo_cupon)
+                
+                # Validar si el cupón está activo
+                if not cupon.esta_activo:
+                    raise ValidationError("Este cupón ha expirado o ha alcanzado su límite de usos.")
+                
+                # Validar si aplica a este curso
+                if cupon.cursos.exists() and not cupon.cursos.filter(pk=curso.id).exists():
+                    raise ValidationError("Este cupón no es válido para este curso.")
+                
+                # Si todo el válido, aplica el descuento
+                descuento = (precio_final * cupon.porcentaje_descuento) / Decimal('100.00')
+                precio_final = precio_final - descuento
+                cupon_aplicado = cupon # Guarda cupón para incrementar su uso
+            except Cupon.DoesNotExist:
+                raise ValidationError("El código de cupón ingresado no existe.")
+            except Exception as e:
+                # Captura cualquier otra validación
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
         # Creación de la Inscripción Pendiente
         inscripcion = Inscripcion.objects.create(
             alumno=alumno,
@@ -74,6 +101,11 @@ class InscripcionViewSet(viewsets.ModelViewSet):
             precio_pagado_usd=curso.precio_usd,
             estado_pago=Inscripcion.ESTADO_PENDIENTE
         )
+        
+        # Incrementar uso del cupón (si se usó)
+        if cupon_aplicado:
+            cupon_aplicado.usos_actuales += 1
+            cupon_aplicado.save(update_fields=['usos_actuales'])
         
         # Obtener la tasa del BCV y preparar la respuesta de pago
         tasa_bcv = obtener_tasa_bcv()
@@ -90,7 +122,9 @@ class InscripcionViewSet(viewsets.ModelViewSet):
                 "mensaje": "Pre-inscripción creada. Continúe al pago.",
                 "inscripcion": response_serializer.data,
                 "datos_pago": {
-                    "precio_usd": str(curso.precio_usd),
+                    "precio_original_usd": str(curso.precio_usd),
+                    "precio_final_usd": str(round(precio_final, 2)), # Precio con descuento (Si aplica)
+                    "cupon_aplicado": codigo_cupon if cupon_aplicado else None,
                     "tasa_bcv": str(tasa_bcv),
                     "monto_ves": str(round(monto_ves, 2)),
                     "metodos": ["Pago Movil", "Transferencia", "TDC/TDD"]
@@ -190,3 +224,50 @@ class ResenaViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         # El serializador ya valida la propiedad de la inscripción
         serializer.save()
+
+class InstructorDashboardAPIView(generics.GenericAPIView):
+    """
+    Endpoint de analísticas (Dashboard) para Instructores.
+    Provee un resumen de ganancias, incripciones y pagos pendientes.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request, *args, **kwars):
+        user = request.user
+        
+        # Verifica que el usuario sea instructor
+        if not user.es_instructor:
+            raise PermissionDenied("Solo los instructores pueden acceder al Dashboard.")
+        
+        # Obtiene todas las transacciones de este instructor
+        transacciones = Transaccion.objects.filter(Inscripcion__curso__instructor=user)
+        
+        # Calcular agregados de ganancias
+        analiticas = transacciones.aggregate(
+            ganancias_totales_usd=Sum('monto_instructor_usd'),
+            ganancias_pendientes_usd=Sum(
+                'monto_instructor_usd',
+                filter=Q(estado_pago_instructor=Transaccion.ESTADO_PENDIENTE)
+            ),
+            ganancias_pagadas_usd=Sum(
+                'monto_instructor_usd',
+                filter=Q(estado_pago_instructor=Transaccion.ESTADO_PAGADO)
+            )
+        )
+        
+        # Calcular total de inscripciones pagadas
+        total_inscripciones = Inscripcion.objects.filter(
+            curso__instructor=user,
+            estado_pago=Inscripcion.ESTADO_PAGADO
+        ).count()
+        
+        # Calcular total de reseñas
+        total_resenas = Resena.objects.filter(inscripcion__curso__instructor=user).count()
+        
+        return Response({
+            'total_inscripciones': total_inscripciones,
+            'total_resenas': total_resenas,
+            'ganancias_totales_usd': analiticas.get('ganancias_totales_usd') or 0.00,
+            'ganancias_pendientes_usd': analiticas.get('ganancias_pendientes_usd') or 0.00,
+            'ganancias_pagadas_usd': analiticas.get('ganancias_pagadas_usd') or 0.00,
+        })

@@ -170,3 +170,45 @@ class Leccion(models.Model):
     def __str__(self):
         return f"Lección {self.orden}: {self.titulo}"
     
+class Cupon(models.Model):
+    """
+    Representa un cupón de descuento.
+    Puede ser creado con un Instructor (limitado a sus cursos) o un Admin (global)
+    """
+    codigo = models.CharField(max_length=50, unique=True, help_text="El código que el alumno usará")
+    # El instructor que creó este cupón (si es nulo, es un cupón de admin/plataforma)
+    instructor = models.ForeignKey(
+        Usuario,
+        on_delete=models.CASCADE,
+        related_name='cupones',
+        null=True,
+        blank=True,
+        limit_choices_to={'rol': Usuario.ROL_INSTRUCTOR}
+    )
+    # A qué cursos aplica este cupón
+    cursos = models.ManyToManyField(
+        Curso,
+        related_name='cupones',
+        blank=True, # Si está vacío, puede aplicar a todos (lógica de admin)
+        help_text="Cursos a los que aplica ete cupón."
+    )
+    
+    porcentaje_descuento = models.DecimalField(max_digits=5, decimal_places=2, help_text="Descuento en porcentaje (ej. 25.00)")
+    fecha_expiracion = models.DateTimeField(null=True, blank=True)
+    usos_maximos = models.PositiveIntegerField(default=100)
+    usos_actuales = models.PositiveIntegerField(default=0, editable=False)
+    
+    class Meta:
+        verbose_name = "Cupón"
+        verbose_name_plural = "Cupones"
+        
+    def __str__(self):
+        return f"{self.codigo} ({self.porcentaje_descuento})"
+    
+    @property
+    def esta_activo(self):
+        """Verifica si el cupón es válido (no expirado y con usos)."""
+        from django.utils import timezone
+        if self.fecha_expiracion and self.fecha_expiracion < timezone.now():
+            return False
+        return self.usos_actuales < self.usos_maximos

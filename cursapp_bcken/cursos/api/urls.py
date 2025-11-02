@@ -1,13 +1,14 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_nested import routers
-from .viewsets import CursoViewSet, ModuloViewSet, LeccionViewSet
+from .viewsets import CursoViewSet, ModuloViewSet, LeccionViewSet, CategoriaViewSet, CuponViewSet
 from evaluacion.api.viewsets import ResenaViewSet
 from comunidad.api.viewsets import PreguntaForoViewSet, RespuestaForoViewSet
 
 # Router Principal para el Curso
 router = DefaultRouter()
 router.register(r'catalogo', CursoViewSet, basename='curso-catalogo')
+router.register(r'cupones', CuponViewSet, basename='instructor-cupones')
 
 # Router Anidado para Módulos (curso/{pk}/modulos/)
 cursos_router = routers.NestedSimpleRouter(router, r'catalogo', lookup='curso')

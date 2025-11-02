@@ -516,3 +516,56 @@ class Resena(models.Model):
     def __str__(self):
         return f"Reseña de {self.inscripcion.alumno.username} para {self.inscripcion.curso.titulo}"
     
+# -------------------------------------------------------------
+# 6. Modelo de Transacciones y Payouts
+# -------------------------------------------------------------
+class Transaccion(models.Model):
+    """
+    Registra una venta completada y calcula la división de ingresos
+    entre el instructor y la plataforma.
+    """
+    ESTADO_PENDIENTE = 'pendiente'
+    ESTADO_PAGADO = 'pagado'
+    ESTADO_REEMBOLSADO = 'reembolsado'
+    
+    ESTADO_PAYOUT_CHOICES = (
+        (ESTADO_PENDIENTE, 'Pendiente de Pago al Instructor'),
+        (ESTADO_PAGADO, 'Pagado al Instructor'),
+        (ESTADO_REEMBOLSADO, 'Reembolsado al Alumno'),
+    )
+    
+    # Vinculado a la inscripción que generó el pago
+    inscripcion = models.OneToOneField(
+        Inscripcion,
+        on_delete=models.SET_NULL, # Si la inscripción se borra, el registro financiero persiste
+        related_name='transaccion',
+        null=True
+    )
+    
+    # Montos al momento de la venta
+    monto_total_usd = models.DecimalField(max_digits=8, decimal_places=2)
+    comision_plataforma_usd = models.DecimalField(max_digits=8, decimal_places=2)
+    monto_instructor_usd = models.DecimalField(max_digits=8, decimal_places=2)
+    
+    # Tasa de comisión aplicada (ej: 15.00 para 15%)
+    comision_aplicada_porcentaje = models.DecimalField(max_digits=5, decimal_places=2)
+    
+    # Estado del pago al instructor
+    estado_pago_instructor = models.CharField(
+        max_length=20,
+        choices=ESTADO_PAYOUT_CHOICES,
+        default=ESTADO_PENDIENTE,
+        db_index=True
+    )
+    
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_pago_instructor = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        verbose_name = "Transacción"
+        verbose_name_plural = "Transacciones"
+        ordering = ['-fecha_creacion']
+        
+    def __str__(self):
+        return f"Transacción {self.id} (Curso: {self.inscripcion.curso.titulo})"
+    

@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'evaluacion.apps.EvaluacionConfig',
     'api.apps.ApiConfig',
     'recomendacion.apps.RecomendacionConfig',
+    'comunidad.apps.ComunidadConfig',
 ]
 
 CACHES = {

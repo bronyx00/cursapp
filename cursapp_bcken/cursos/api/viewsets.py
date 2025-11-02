@@ -77,11 +77,8 @@ class CursoViewSet(viewsets.ModelViewSet):
             return self.queryset.filter(estado=Curso.ESTADO_PUBLICADO)
         
         # Si el usuario es instructor
-        # Usamos Q objects para lógica OR: (es mi curso) O (es público)
         from django.db.models import Q
         
-        # Mostrar cursos donde (soy el instructor) O (el curso está publicado)
-        # Esto permite al instructor ver sus borradores Y también los cursos de otros instructores.
         return self.queryset.filter(
             Q(instructor=user) | Q(estado=Curso.ESTADO_PUBLICADO)
         ).distinct() # Para evitar duplicados si un curso es público y es mío

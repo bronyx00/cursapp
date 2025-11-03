@@ -2,6 +2,7 @@ from rest_framework import viewsets, permissions, status, generics
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from django.db.models import Sum, F, Q, DecimalField
+from decimal import Decimal
 from django.shortcuts import get_object_or_404
 from evaluacion.models import Inscripcion, PuntosAlumno, ProgresoLeccion, Resena, Transaccion
 from cursos.models import Curso, Leccion, Cupon
@@ -100,7 +101,7 @@ class InscripcionViewSet(viewsets.ModelViewSet):
         inscripcion = Inscripcion.objects.create(
             alumno=alumno,
             curso=curso,
-            precio_pagado_usd=curso.precio_usd,
+            precio_pagado_usd=precio_final,
             estado_pago=Inscripcion.ESTADO_PENDIENTE
         )
         

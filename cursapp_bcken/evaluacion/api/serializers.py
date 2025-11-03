@@ -132,5 +132,5 @@ class MiAprendizajeSerializer(serializers.ModelSerializer):
             'id',
             'curso',
             'porcentaje_progreso',
-            'compltado'
+            'completado'
         )

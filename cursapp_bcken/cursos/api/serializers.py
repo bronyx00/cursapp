@@ -95,7 +95,7 @@ class CuponSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cupon
         fields = (
-            'id', 'codigo', 'curso', 'porcentaje_descuento',
+            'id', 'codigo', 'cursos', 'porcentaje_descuento',
             'fecha_expiracion', 'usos_maximos', 'usos_actuales'
         )
         read_only_fields = ("usos_actuales",)

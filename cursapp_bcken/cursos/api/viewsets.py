@@ -1,9 +1,8 @@
-from rest_framework import viewsets, permissions, exceptions
-from rest_framework.decorators import action
+from rest_framework import viewsets, permissions
+from django.shortcuts import get_object_or_404
 from django.db.models import Count
 from cursos.models import Curso, Modulo, Leccion, Categoria, Cupon
 from .serializers import CursoListSerializer, CursoDetailSerializer, ModuloSerializer, LeccionSerializer, CategoriaSerializer, CuponSerializer
-from evaluacion.models import InteraccionLeccion
 
 # --- Permisos Personalizados ---
 class IsOwnerOrReadOnly(permissions.BasePermission):
@@ -100,10 +99,12 @@ class ModuloViewSet(viewsets.ModelViewSet):
             return Modulo.objects.filter(curso__pk=curso_pk).order_by('orden')
         return Modulo.objects.all().order_by('orden')
     
-    # Lógica para crear un módulo asignándolo al curso correcto
-    # def perform_create(self, serializer):
-    #     # Lógica compleja de asignación a un curso existente
-    #     pass
+    def perform_create(self, serializer):
+        """
+        Asigna automáticamente el Módulo al Curso padre (obtenido de la URL).
+        """
+        curso = get_object_or_404(Curso, pk=self.kwargs.get('curso_pk'))
+        serializer.save(curso=curso)
     
 class LeccionViewSet(viewsets.ModelViewSet):
     """ViewSet para la gestión de Lecciones."""
@@ -117,10 +118,12 @@ class LeccionViewSet(viewsets.ModelViewSet):
             return Leccion.objects.filter(modulo__pk=modulo_pk).order_by('orden')
         return Leccion.objects.all().order_by('orden')
     
-    # Lógica para crear una lección asignándola al módulo correcto
-    # def perform_create(self, serializer):
-    #     # Lógica compleja de asignación a un módulo existente
-    #     pass
+    def perform_create(self, serializer):
+        """
+        Asigna automáticamente la Lección al Módulo padre (obtenido de la URL).
+        """
+        modulo = get_object_or_404(Modulo, pk=self.kwargs.get('modulo_pk'))
+        serializer.save(modulo=modulo)
     
 class CategoriaViewSet(viewsets.ReadOnlyModelViewSet):
     """

@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from evaluacion.models import Inscripcion, ProgresoLeccion, Resena
 from core.api.serializers import PerfilUsuarioSerializer
+from cursos.api.serializers import CursoListSerializer
 from core.models import Usuario
 
 class InscripcionSerializer(serializers.ModelSerializer):
@@ -116,3 +117,20 @@ class ResenaSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Ya has enviado una reseña para este curso.")
         
         return inscripcion
+    
+class MiAprendizajeSerializer(serializers.ModelSerializer):
+    """
+    Serializer para el Dasboard "Mi aprendizaje".
+    Muestra el curso y el progreso general.
+    """
+    # Usamos el serializer de lista de cursos para mostrar los detalles del curso
+    curso = CursoListSerializer(read_only=True)
+    
+    class Meta:
+        model = Inscripcion
+        fields = (
+            'id',
+            'curso',
+            'porcentaje_progreso',
+            'compltado'
+        )

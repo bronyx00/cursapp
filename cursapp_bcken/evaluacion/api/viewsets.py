@@ -12,7 +12,8 @@ from .serializers import (
     InscripcionCrearSerializer, 
     LeaderboardSerializer,
     ScormProgresoSerializer,
-    ResenaSerializer
+    ResenaSerializer,
+    MiAprendizajeSerializer
 )
 
 # --- PERMISOS PERSONALIZADOS ---
@@ -28,6 +29,7 @@ class IsOwnerOfResenaOrReadOnly(permissions.BasePermission):
         # Permite escritura solo si es el dueño de la inscripción
         return obj.inscripcion.alumno == request.user
 
+# --- VIEWSETS ---
 class InscripcionViewSet(viewsets.ModelViewSet):
     """
     Permite a los Alumnos inscribirse en cursos y ver su historial de inscripciones.
@@ -240,7 +242,7 @@ class InstructorDashboardAPIView(generics.GenericAPIView):
             raise PermissionDenied("Solo los instructores pueden acceder al Dashboard.")
         
         # Obtiene todas las transacciones de este instructor
-        transacciones = Transaccion.objects.filter(Inscripcion__curso__instructor=user)
+        transacciones = Transaccion.objects.filter(inscripcion__curso__instructor=user)
         
         # Calcular agregados de ganancias
         analiticas = transacciones.aggregate(
@@ -271,3 +273,18 @@ class InstructorDashboardAPIView(generics.GenericAPIView):
             'ganancias_pendientes_usd': analiticas.get('ganancias_pendientes_usd') or 0.00,
             'ganancias_pagadas_usd': analiticas.get('ganancias_pagadas_usd') or 0.00,
         })
+        
+class MiAprendizajeViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Endpoint para el Dashboard "Mi Aprendizaje" del alumno.
+    Devuelve solo las inscripciones PAGADAS y ACTIVAS.
+    """
+    serializer_class = MiAprendizajeSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        # Devuelve solo los cursos pagos del usuario actual
+        return Inscripcion.objects.filter(
+            alumno=self.request.user,
+            estado_pago=Inscripcion.ESTADO_PAGADO
+        ).select_related('curso', 'curso__instructor')

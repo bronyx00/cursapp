@@ -1,10 +1,17 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
-from .viewsets import InscripcionViewSet, LeaderboardAPIView, ScormProgresoAPIView, InstructorDashboardAPIView
+from .viewsets import (
+    InscripcionViewSet, 
+    LeaderboardAPIView, 
+    ScormProgresoAPIView, 
+    InstructorDashboardAPIView,
+    MiAprendizajeViewSet
+)
 
 router = DefaultRouter()
 # Usaremos 'matricula' para la ruta
 router.register(r'matricula', InscripcionViewSet, basename='matricula')
+router.register(r'mi-aprendizaje', MiAprendizajeViewSet, basename='mi-aprendizaje')
 
 urlpatterns = router.urls + [
     # Ruta para la tabla de Clasificación

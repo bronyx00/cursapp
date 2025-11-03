@@ -1,24 +1,31 @@
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import post_save, post_delete, pre_save
 from django.dispatch import receiver
 from .models import ProgresoLeccion, IntentoCuestionario, PuntosAlumno, Resena, Inscripcion, Transaccion
 from django.db.models import Avg, Count
 from core.models import Usuario
 from decimal import Decimal
 
-@receiver(post_save, sender=ProgresoLeccion)
+@receiver(pre_save, sender=ProgresoLeccion)
 def otorgar_xp_por_leccion(sender, instance, created, **kargs):
     """
     Otorga XP automáticamente cuando una lección se marca como completada
     por primera vez
     """
+    # Si el objeto no es nuevo (no tiene pk), no podemos comparar
+    if instance.pk is None:
+        return
+    
     # Si la lección está completada y no es la primera vez se guarda (para evitar dobles puntos)
     if instance.completado and not created:
-        # Verificar si ya dimos XP por esta lección (para evitar trampas)
-        progreso_anterior = ProgresoLeccion.objects.get(pk=instance.pk)
-        if not progreso_anterior.completado: # Si NO estaba completada antes
-            usuario = instance.inscripcion.alumno
-            usuario.xp_totales += 10 # Otorga 10 XP
-            usuario.save(update_fields=['xp_totales'])
+        try:
+            # Verificar si ya dimos XP por esta lección (para evitar trampas)
+            progreso_anterior = ProgresoLeccion.objects.get(pk=instance.pk)
+            if not progreso_anterior.completado: # Si NO estaba completada antes
+                usuario = instance.inscripcion.alumno
+                usuario.xp_totales += 10 # Otorga 10 XP
+                usuario.save(update_fields=['xp_totales'])
+        except ProgresoLeccion.DoesNotExist:
+            return
             
 @receiver(post_save, sender=IntentoCuestionario)
 def otorgar_xp_por_cuestionario(sender, instance, created, **kargs):

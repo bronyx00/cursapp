@@ -1,5 +1,6 @@
 from rest_framework import permissions
 from evaluacion.models import Inscripcion
+from comunidad.models import PreguntaForo
 
 class IsEnrolledAndOwnerOrReadOnly(permissions.BasePermission):
     """
@@ -21,8 +22,17 @@ class IsEnrolledAndOwnerOrReadOnly(permissions.BasePermission):
         # Permisos de Escritura
         # Verificamos que el usuario esté inscrito en el curso asociado
         leccion_id = view.kwargs.get('leccion_pk')
-        if not leccion_id:
+        pregunta_id = view.kwargs.get('pregunta_pk')
+        
+        if not leccion_id and not pregunta_id:
             return False
+        
+        if pregunta_id:
+            # Si estamos creando una RESPUESTA, buscamos la lección a través de la pregunta
+            try:
+                leccion_id = PreguntaForo.objects.get(pk=pregunta_id).leccion.id
+            except PreguntaForo.DoesNotExist:
+                return False
         
         # Verificar la inscripción
         esta_inscrito = Inscripcion.objects.filter(

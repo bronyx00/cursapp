@@ -56,7 +56,7 @@ class CursoViewSet(viewsets.ModelViewSet):
     - El instructor propietario ve TODOS sus cursos (Borrador, Publicado, Suspendido).
     """
     queryset = Curso.objects.all().order_by('-fecha_creacion')
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly] # Lectura pública, escritura solo para Instructores.
+    permission_classes = [IsOwnerOrReadOnly] # Lectura pública, escritura solo para Instructores.
     
     def get_serializer_class(self):
         """Alterna entre el serializer de listado y el de detalle."""

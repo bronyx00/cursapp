@@ -201,7 +201,7 @@ class ProgresoLeccion(models.Model):
     estado_scorm = models.CharField(
         max_length=20,
         choices=ESTADO_SCORM_CHOICES,
-        default='Not attempted',
+        default='not attempted',
         blank=True
     )
     

@@ -135,9 +135,7 @@ class LeccionViewSet(viewsets.ModelViewSet):
             
             # Llama a la tarea asíncrona
             process_video_task.delay(leccion.id)
-        
-        serializer.save(modulo=modulo)
-    
+ 
 class CategoriaViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ViewSet para listar y recuperar Categorías. Solo lectura

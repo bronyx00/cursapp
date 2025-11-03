@@ -3,6 +3,7 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Count
 from cursos.models import Curso, Modulo, Leccion, Categoria, Cupon
 from .serializers import CursoListSerializer, CursoDetailSerializer, ModuloSerializer, LeccionSerializer, CategoriaSerializer, CuponSerializer
+from cursos.tasks import process_video_task
 
 # --- Permisos Personalizados ---
 class IsOwnerOrReadOnly(permissions.BasePermission):
@@ -121,8 +122,20 @@ class LeccionViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """
         Asigna automáticamente la Lección al Módulo padre (obtenido de la URL).
+        Y dispara la tarea asíncrona si es un video.
         """
         modulo = get_object_or_404(Modulo, pk=self.kwargs.get('modulo_pk'))
+        
+        # Guarda la lección (aún en estado PENDIENTE)
+        leccion = serializer.save(modulo=modulo)
+        
+        if leccion.tipo_contenido == Leccion.TIPO_VIDEO and leccion.archivo:
+            leccion.estado_procesamiento = Leccion.ESTADO_PROCESANDO
+            leccion.save(update_fields=['estado_procesamiento'])
+            
+            # Llama a la tarea asíncrona
+            process_video_task.delay(leccion.id)
+        
         serializer.save(modulo=modulo)
     
 class CategoriaViewSet(viewsets.ReadOnlyModelViewSet):

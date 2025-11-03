@@ -149,6 +149,18 @@ class Leccion(models.Model):
         (TIPO_SCORM, 'Paquete SCORM'),
     )
     
+    ESTADO_PENDIENTE = 'pendiente'
+    ESTADO_PROCESANDO = 'procesando'
+    ESTADO_COMPLETADO = 'completado'
+    ESTADO_ERROR = 'error'
+    
+    ESTADO_PROCESAMIENTO_CHOICES = (
+        (ESTADO_PENDIENTE, 'Pendiente'),
+        (ESTADO_PROCESANDO, 'Procesando Video'),
+        (ESTADO_COMPLETADO, 'Completado y Listo'),
+        (ESTADO_ERROR, 'Error de Procesamiento'),
+    )
+    
     modulo = models.ForeignKey(Modulo, on_delete=models.CASCADE, related_name='lecciones')
     titulo = models.CharField(max_length=255)
     orden = models.PositiveIntegerField(default=0)
@@ -158,6 +170,9 @@ class Leccion(models.Model):
     # Para SCORM, almacenará la ruta al paquete.
     archivo_url = models.URLField(max_length=255, blank=True, null=True, verbose_name='Ruta o URL del contenido multimedia/SCORM')
     archivo = models.FileField(upload_to='lecciones/%Y/%m/', blank=True, null=True)
+    
+    # Estado del video de la leccion
+    estado_procesamiento = models.CharField(max_length=20, choices=ESTADO_PROCESAMIENTO_CHOICES, default=ESTADO_PENDIENTE)
     
     duracion_minutos = models.PositiveIntegerField(default=0, help_text='Tiempo estimado de duración.')
     

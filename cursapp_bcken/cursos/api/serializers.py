@@ -2,6 +2,7 @@ from rest_framework import serializers
 from cursos.models import Curso, Modulo, Leccion, Categoria, Etiqueta, Cupon
 from core.models import Usuario
 
+
 # Serializer para Categoría
 class CategoriaSerializer(serializers.ModelSerializer):
     class Meta: 
@@ -33,7 +34,7 @@ class LeccionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Leccion
         # Excluimos 'modulo' aquí para evitar la redundancia circular
-        fields = ('id', 'titulo', 'orden', 'tipo_contenido', 'archivo_url', 'duracion_minutos')
+        fields = ('id', 'titulo', 'orden', 'tipo_contenido', 'archivo_url', 'duracion_minutos', 'estado_procesamiento')
     
 # Módulo Serializer (Nivel intermedio: incluye lecciones)
 class ModuloSerializer(serializers.ModelSerializer):

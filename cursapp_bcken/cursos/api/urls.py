@@ -20,7 +20,7 @@ modulos_router.register(r'lecciones', LeccionViewSet, basename='modulo-lecciones
 
 # Router Anidado desde lecciones par el foro
 preguntas_router = routers.NestedSimpleRouter(modulos_router, r'lecciones', lookup='leccion')
-preguntas_router.register(r'preguntas', PreguntaForoViewSet,  basename='leccion-prerguntas')
+preguntas_router.register(r'preguntas', PreguntaForoViewSet,  basename='leccion-preguntas')
 
 # Router Anidado desde preguntas para las respuestas
 respuestas_router = routers.NestedSimpleRouter(preguntas_router, r'preguntas', lookup='pregunta')

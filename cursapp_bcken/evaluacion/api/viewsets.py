@@ -56,7 +56,7 @@ class InscripcionViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         
         curso_id = serializer.validated_data['curso'].id
-        codigo_cupon = serializer.validated_data.get('codigo-cupon')
+        codigo_cupon = serializer.validated_data.get('codigo_cupon')
         alumno = request.user
         
         # Verificación de preexistencia
@@ -195,7 +195,7 @@ class ScormProgresoAPIView(generics.RetrieveUpdateAPIView):
             leccion=leccion
         )
         
-        if leccion:
+        if created:
             # Si es la primera vez, el punto de entrada es 'ab-initio' (desde el inicio)
             progreso.entry_point = 'ab-initio'
         else:

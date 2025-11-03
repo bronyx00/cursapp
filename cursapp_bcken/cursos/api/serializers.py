@@ -64,7 +64,7 @@ class CursoDetailSerializer(serializers.ModelSerializer):
             'fecha_actualizacion', 'modulos', 'categoria', 'etiquetas',
             # Campos de Calificaiones
             'total_resenas',
-            'promedio_calificaciono_general',
+            'promedio_calificacion_general',
             'promedio_calidad_contenido',
             'promedio_claridad_explicacion',
             'promedio_utilidad_practica',

@@ -59,7 +59,7 @@ def recalcular_calificaciones_curso(curso_id):
             prom_general=Avg('calificacion_general'),
             prom_contenido=Avg('calificacion_calidad_contenido'),
             prom_explicacion=Avg('calificacion_claridad_explicacion'),
-            prom_utilidad=Avg('Calificacion_utilidad_practica'),
+            prom_utilidad=Avg('calificacion_utilidad_practica'),
             prom_soporte=Avg('calificacion_soporte_instructor')
         )
         

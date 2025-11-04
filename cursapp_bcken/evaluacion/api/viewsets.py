@@ -1,7 +1,9 @@
 from rest_framework import viewsets, permissions, status, generics
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from django.db.models import Sum, F, Q, DecimalField
+from django.views.decorators.csrf import csrf_exempt
 from decimal import Decimal
 from django.shortcuts import get_object_or_404
 from evaluacion.models import Inscripcion, PuntosAlumno, ProgresoLeccion, Resena, Transaccion
@@ -130,7 +132,8 @@ class InscripcionViewSet(viewsets.ModelViewSet):
                     "cupon_aplicado": codigo_cupon if cupon_aplicado else None,
                     "tasa_bcv": str(tasa_bcv),
                     "monto_ves": str(round(monto_ves, 2)),
-                    "metodos": ["Pago Movil", "Transferencia", "TDC/TDD"]
+                    "metodos": ["Pago Movil", "Transferencia", "TDC/TDD"],
+                    "referencia_pago": inscripcion.id
                 }
             },
             status=status.HTTP_201_CREATED
@@ -289,3 +292,62 @@ class MiAprendizajeViewSet(viewsets.ReadOnlyModelViewSet):
             alumno=self.request.user,
             estado_pago=Inscripcion.ESTADO_PAGADO
         ).select_related('curso', 'curso__instructor')
+        
+class PagoWebhookAPIView(APIView):
+    """
+    Endpoint de Webhook para que la pasarela de pago externa
+    confirme que un pago fue exitoso.
+    """
+    # PERMISO PÚBLICO
+    # La pasarela de pago no tiene un token de usuario
+    permission_classes = [permissions.AllowAny]
+    
+    # DESACTIVAR CSRF
+    # Necesario para que la API externa pueda hacer POST
+    @csrf_exempt
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+    
+    def post(self, request, *args, **kwargs):
+        # SEGURIDAD
+        # Se debe colocar una firma que envia la pasarela de pago
+        # para verificar que es una petición legitima y no es un ataque.
+        
+        # OBTENER DATOS
+        # Asumiendo que la pasarela nos envía un JSON como:
+        # { "evento": "pago_exitoso", "referencia": <ID_DE_LA_INSCRIPCION> }
+        data = request.data
+        evento = data.get('evento')
+        referencia_id = data.get('referencia')
+        
+        if evento == 'pago_exitoso' and referencia_id:
+            try:
+                # Encontrar y actualizar la Inscripción
+                inscripcion = Inscripcion.objects.get(
+                    id=referencia_id,
+                    estado_pago=Inscripcion.ESTADO_PENDIENTE
+                )
+                
+                inscripcion.estado_pago = Inscripcion.ESTADO_PAGADO
+                inscripcion.referencia_pago = data.get('id_transaccion_gateway')
+                inscripcion.save(update_fields=['estado_pago', 'referencia_pago'])
+                
+                return Response(
+                    {"status": "ok", "inscripcion_id": inscripcion.id},
+                    status=status.HTTP_200_OK
+                )
+            except Inscripcion.DoesNotExist:
+                return Response(
+                    {"error": "Inscripción no encontrada o ya procesada."}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                return Response(
+                    {"error": f"Error interno: {str(e)}"}, 
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+                
+        return Response(
+            {"error": "Datos de webhook inválidos"}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )

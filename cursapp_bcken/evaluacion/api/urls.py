@@ -5,7 +5,8 @@ from .viewsets import (
     LeaderboardAPIView, 
     ScormProgresoAPIView, 
     InstructorDashboardAPIView,
-    MiAprendizajeViewSet
+    MiAprendizajeViewSet,
+    PagoWebhookAPIView
 )
 
 router = DefaultRouter()
@@ -22,4 +23,7 @@ urlpatterns = router.urls + [
     
     # Endpoint para el Dashboard del Instructor
     path('instructor/dashboard/', InstructorDashboardAPIView.as_view(), name='instructor-dashboard'),
+    
+    # Endpoint para Webhook de la pasarela de pagos
+    path('pagos/webhook/', PagoWebhookAPIView.as_view(), name='pago-webhook'),
 ]

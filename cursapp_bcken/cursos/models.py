@@ -141,12 +141,14 @@ class Leccion(models.Model):
     TIPO_DOCUMENTO = 2
     TIPO_CUESTIONARIO = 3
     TIPO_SCORM = 4
+    TIPO_ARTICULO = 5
     
     TIPOS_CHOICES = (
         (TIPO_VIDEO, 'Video'),
         (TIPO_DOCUMENTO, 'Documento/PDF'),
         (TIPO_CUESTIONARIO, 'Cuestionario/Examen'),
         (TIPO_SCORM, 'Paquete SCORM'),
+        (TIPO_ARTICULO, 'Artículo/Código'),
     )
     
     ESTADO_PENDIENTE = 'pendiente'
@@ -165,6 +167,12 @@ class Leccion(models.Model):
     titulo = models.CharField(max_length=255)
     orden = models.PositiveIntegerField(default=0)
     tipo_contenido = models.PositiveSmallIntegerField(choices=TIPOS_CHOICES, default=TIPO_VIDEO, verbose_name='Tipo de Contenido')
+    
+    cuerpo_articulo = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Contenido en Markdown para lecciones de tipo Artículo/Código."
+    )
     
     # Campo para almacenar la URL o el archivo del contenido.
     # Para SCORM, almacenará la ruta al paquete.

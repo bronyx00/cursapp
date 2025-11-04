@@ -10,10 +10,14 @@ __pycache__/
 db.sqlite3
 
 # Archivos de configuración de Django
-/mi_proyecto_django/settings/local.py # Si usas configuraciones locales
+/mi_proyecto_django/settings/local.py
 
 # Archivos de IDEs (opcional, como para VS Code)
 .vscode/
 
 # Archivos de sistema
 .DS_Store
+
+# Archivos de medios generados por el usuario
+/media/
+cursapp_bcken/media/

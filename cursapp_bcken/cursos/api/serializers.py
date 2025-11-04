@@ -37,7 +37,7 @@ class LeccionSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'titulo', 'orden', 'tipo_contenido', 
             'archivo_url', 'archivo','duracion_minutos', 
-            'estado_procesamiento'
+            'estado_procesamiento', 'cuerpo_articulo'
         )
         
     

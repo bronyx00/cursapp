@@ -1,11 +1,13 @@
 import { defineStore } from "pinia";
 import apiClient from "@/services/apiClient";
+import type { UserProfile } from "@/types/user.types";
+import router from '@/router'
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
         accessToken: localStorage.getItem('access_token') || null,
         refreshToken: localStorage.getItem('refresh_token') || null,
-        user: null as any | null, // Cambiar luego a 'UserProfile | null'
+        user: null as UserProfile | null, 
     }),
 
     getters: {
@@ -51,6 +53,7 @@ export const useAuthStore = defineStore('auth', {
             this.user = null;
             localStorage.removeItem('access_token');
             localStorage.removeItem('refresh_token');
+            router.push('/login');
         },
     },
 });

@@ -1,19 +1,21 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '../store/auth.store';
 
+// Layouts
+import DashboardLayout from '@/layouts/DashboardLayout.vue';
+import MarketingLayout from '@/layouts/MarketingLayout.vue';
+
 // Todas las páginas
 import HomePage from '@/pages/HomePage.vue';
 import LoginPage from '@/pages/LoginPage.vue';
 import AlumnoDashboard from '@/pages/AlumnoDashboard.vue';
 import LeaderboardPage from '@/pages/LeaderboardPage.vue';
-import DashboardLayout from '@/layouts/DashboardLayout.vue';
-import AuthLayout from '@/layouts/AuthLayout.vue';
 
 const routes = [
     // Rutas públicas 
     {
         path: '/',
-        component: AuthLayout,
+        component: MarketingLayout,
         children: [
             { path: '/', name: 'Home', component: HomePage },
             { path: '/login', name: 'Login', component: LoginPage },
@@ -50,20 +52,26 @@ const router = createRouter({
 // Navigation Guard (Seguridad de Rutas)
 router.beforeEach(async (to, from, next) => {
     const authStore = useAuthStore();
-    const isAuthenticated = authStore.isAuthenticated;
 
-    // Intenta cargar el perfil si hay un token pero no hay usuario
-    if (authStore.accessToken && !authStore.user) {
-        await authStore.fetchProfile();
+    // Aseguramos de que el store se inicialice
+    if (!authStore.user && authStore.accessToken) {
+        try {
+            await authStore.fetchProfile();
+        } catch (e) {
+            // Token inválido, limpiar
+            authStore.logout();
+        }
     }
 
-    const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
+    const isAuthenticated = authStore.isAuthenticated;
     const userRole = authStore.user?.rol;
 
+    const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
+    
     if (requiresAuth && !isAuthenticated) {
         // Si requiere autenticación y no la tiene, va al login
         next({ name: 'Login' });
-    } else if (to.name === 'Login' && isAuthenticated) {
+    } else if ((to.name === 'Login' || to.name === 'Home') && isAuthenticated) {
         // Redirige al dashboard correspondiente, una vez logueado
         if (userRole === 3) next({ name: 'MiAPrendizaje' });
         // if (userRole === 2) next({ name: 'InstructorDashboard' });

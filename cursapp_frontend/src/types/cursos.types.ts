@@ -7,6 +7,8 @@ export interface CursoList {
     promedio_calificacion_general: string;
     total_resenas: number;
     portada: string | null;
+    precio_usd: string;
+    precio_ves: string | null;
 }
 
 export interface MiCursoInscrito {

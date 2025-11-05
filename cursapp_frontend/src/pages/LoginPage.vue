@@ -31,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, createApp } from 'vue';
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/auth.store';
 import Button from '@/components/ui/button/Button.vue';

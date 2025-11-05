@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from cursos.models import Curso, Modulo, Leccion, Categoria, Etiqueta, Cupon
 from core.models import Usuario
+from utils.monetizacion import obtener_tasa_bcv
 
 
 # Serializer para Categoría
@@ -84,14 +85,27 @@ class CursoListSerializer(serializers.ModelSerializer):
     estado_display = serializers.CharField(source='get_estado_display', read_only=True)
     promedio_calificacion_general = serializers.DecimalField(max_digits=3, decimal_places=2, read_only=True)
     total_resenas = serializers.IntegerField(read_only=True)
+    precio_ves = serializers.SerializerMethodField()
     
     class Meta:
         model = Curso
         fields = (
             'id', 'titulo', 'slug', 'descripcion', 'instructor_nombre', 
-            'precio_usd', 'estado', 'estado_display', 'num_modulos',
+            'precio_usd', 'precio_ves','estado', 'estado_display', 'num_modulos',
             'promedio_calificacion_general', 'total_resenas', 'portada'
         )
+    
+    def get_precio_ves(self, obj):
+        """
+        Calcula el precio en VES en tiendo real.
+        """
+        try:
+            tasa = obtener_tasa_bcv()
+            if tasa and obj.precio_usd:
+                return round(obj.precio_usd * tasa, 2)
+        except Exception:
+            pass
+        return None
         
     # Método para calcular el número de módulos eficientemente
     def get_num_modulos(self, obj):

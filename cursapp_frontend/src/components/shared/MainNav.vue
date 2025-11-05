@@ -6,8 +6,8 @@
             @click="navigate"
             class="flex items-center gap-3 rounded-lg px-3 py-2 text-base font-medium transition-all"
             :class="isActive
-            ? 'bg-primary text-primary-foreground'  
-            : 'text-secondary-foreground hover:bg-secondary/50'"
+            ? 'bg-primary-primary text-sidebar-primary-foreground'  
+            : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-accent-foreground'"
         >
             <LayoutDashboard class="h-5 w-5" />
             Mi Aprendizaje
@@ -20,8 +20,8 @@
             @click="navigate"
             class="flex items-center gap-3 rounded-lg px-3 py-2 text-base font-medium transition-all"
             :class="isActive
-            ? 'bg-primary text-primary-foreground'
-            : 'text-secondary-foreground hover:bg-secondary/50'"
+            ? 'bg-sidebar-primary text-sidebar-primary-foreground'
+            : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'"
         >
             <Trophy class="h-5 w-5" />
             Leaderboard

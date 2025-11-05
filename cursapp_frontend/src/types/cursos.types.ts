@@ -6,7 +6,7 @@ export interface CursoList {
     instructor_nombre: string;
     promedio_calificacion_general: string;
     total_resenas: number;
-    imagen_portada?: string;
+    portada: string;
 }
 
 export interface MiCursoInscrito {

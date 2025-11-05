@@ -67,7 +67,7 @@ class CursoDetailSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'titulo', 'slug', 'descripcion', 'instructor', 'precio_usd',
             'req_certificado', 'estado', 'estado_display', 'fecha_creacion', 
-            'fecha_actualizacion', 'modulos', 'categoria', 'etiquetas',
+            'fecha_actualizacion', 'modulos', 'categoria', 'etiquetas', 'portada',
             # Campos de Calificaiones
             'total_resenas',
             'promedio_calificacion_general',
@@ -90,7 +90,7 @@ class CursoListSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'titulo', 'slug', 'descripcion', 'instructor_nombre', 
             'precio_usd', 'estado', 'estado_display', 'num_modulos',
-            'promedio_calificacion_general', 'total_resenas'
+            'promedio_calificacion_general', 'total_resenas', 'portada'
         )
         
     # Método para calcular el número de módulos eficientemente

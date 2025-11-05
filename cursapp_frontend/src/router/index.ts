@@ -5,6 +5,7 @@ import { useAuthStore } from '../store/auth.store';
 import HomePage from '@/pages/HomePage.vue';
 import LoginPage from '@/pages/LoginPage.vue';
 import AlumnoDashboard from '@/pages/AlumnoDashboard.vue';
+import LeaderboardPage from '@/pages/LeaderboardPage.vue';
 import DashboardLayout from '@/layouts/DashboardLayout.vue';
 import AuthLayout from '@/layouts/AuthLayout.vue';
 
@@ -30,6 +31,12 @@ const routes = [
                 name: 'MiAprendizaje',
                 component: AlumnoDashboard,
                 meta: { roles: [3] } // Solo alumnos
+            },
+            {
+                path: '/leaderboard',
+                name: 'Leaderboard',
+                component: LeaderboardPage,
+                meta: { roles: [3] }
             },
         ],
     },

@@ -4,7 +4,12 @@
 
             <CardHeader class="p-0">
                 <div class="aspect-video w-full bg-secondary">
-
+                    <img
+                        v-if="curso.portada"
+                        :src="curso.portada"
+                        :alt="curso.titulo"
+                        class="h-full w-full object-cover"
+                    />
                 </div>
             </CardHeader>
 
@@ -35,7 +40,7 @@
 <script setup lang="ts">
 import type { CursoList } from '@/types/cursos.types';
 import { RouterLink } from 'vue-router';
-import { CardContent, CardFooter, CardHeader } from '@/components/ui/card'
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress';
 
 defineProps<{

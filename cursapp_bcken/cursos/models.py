@@ -50,8 +50,8 @@ class Curso(models.Model):
     )
     
     titulo = models.CharField(max_length=200, unique=True)
-    portada = models.ImageField(
-        upload_to='portadas_curso/%Y/%m/',
+    portada = models.TextField( # Cambiar a ImageField para produccion
+        # upload_to='portadas_curso/%Y/%m/', Añadir para produccion
         default='https://plus.unsplash.com/premium_photo-1681426414801-f36575c2de9e?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8Y292ZXJ8ZW58MHx8MHx8fDA%3D&fm=jpg&q=60&w=3000',
         blank=True,
         null=True,

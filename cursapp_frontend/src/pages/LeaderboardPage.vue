@@ -35,7 +35,7 @@
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead class="w-[80px]">Posición</TableHead>
+            <TableHead class="w-20">Posición</TableHead>
             <TableHead>Alumno</TableHead>
             <TableHead class="text-right">Puntuación (XP)</TableHead>
           </TableRow>

@@ -157,7 +157,7 @@ class Inscripcion(models.Model):
     class Meta:
         verbose_name = "Inscripción"
         verbose_name_plural = "Inscripciones"
-        # unique_together = ('alumno', 'curso') # Un alumno solo puede inscribirse una vez al mismo curso.
+        unique_together = ('alumno', 'curso') 
         
     def __str__(self):
         return f"{self.alumno.username} inscrito en {self.curso.titulo}"

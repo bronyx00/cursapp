@@ -65,9 +65,9 @@ class InscripcionViewSet(viewsets.ModelViewSet):
         alumno = request.user
         
         # Verificación de preexistencia
-        if Inscripcion.objects.filter(alumno=alumno, curso_id=curso_id, estado_pago=Inscripcion.ESTADO_PAGADO).exists():
+        if Inscripcion.objects.filter(alumno=alumno, curso_id=curso_id, estado_pago__in=[Inscripcion.ESTADO_PAGADO, Inscripcion.ESTADO_PENDIENTE]).exists():
             return Response(
-                {"error": "Ya estás inscrito y tu curso está activo."},
+                {"error": "Ya tienes una inscripción (activa o pendiente de pago) para este curso."},
                 status=status.HTTP_400_BAD_REQUEST
             )
             

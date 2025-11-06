@@ -10,6 +10,7 @@ import HomePage from '@/pages/HomePage.vue';
 import LoginPage from '@/pages/LoginPage.vue';
 import AlumnoDashboard from '@/pages/AlumnoDashboard.vue';
 import LeaderboardPage from '@/pages/LeaderboardPage.vue';
+import type { UserRole } from '@/types/user.types';
 
 const routes = [
     // Rutas públicas 
@@ -71,18 +72,24 @@ router.beforeEach(async (to, from, next) => {
     if (requiresAuth && !isAuthenticated) {
         // Si requiere autenticación y no la tiene, va al login
         next({ name: 'Login' });
-    } else if ((to.name === 'Login' || to.name === 'Home') && isAuthenticated) {
+    }
+    
+    if ((to.name === 'Login' || to.name === 'Home') && isAuthenticated) {
         // Redirige al dashboard correspondiente, una vez logueado
         if (userRole === 3) next({ name: 'MiAPrendizaje' });
         // if (userRole === 2) next({ name: 'InstructorDashboard' });
         else next({ name: 'Home' }); // Fallback
-    } else if (requiresAuth && to.meta.roles && !to.meta.roles.includes(userRole)) {
-        // Si requiere un rol específico y el usuario no lo tiene
-        next({ name: 'Home' }); // Cambiar luego por una página no autorizada
-    } else {
-        // Todo bien
-        next();
     }
+
+    const requiredRoles = to.meta.roles as UserRole[] | undefined;
+    
+    if (requiresAuth && requiredRoles && requiredRoles.length > 0) {
+        if (!userRole || !requiredRoles.includes(userRole)) {
+            // Si requiere un rol específico y el usuario no lo tiene
+            return next({ name: 'Home' }); // Cambiar luego por una página no autorizada
+        }
+    }
+    next();
 });
 
 export default router;

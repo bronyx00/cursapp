@@ -1,4 +1,4 @@
-export const enum UserRole {
+export enum UserRole {
     Admin = 1,
     Instructor = 2,
     Alumno = 3,
@@ -17,5 +17,5 @@ export interface UserProfile {
     verificado: boolean;
     entidad_verificada: string | null;
     xp_totales?: string | number;
-    puntos_totales?: number;
+    puntos_totales: number;
 }

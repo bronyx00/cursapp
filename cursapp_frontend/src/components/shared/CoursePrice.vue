@@ -5,7 +5,7 @@
     </span>
     
     <span v-if="precioVes" class="text-sm text-muted-foreground mt-1">
-      ({{ formatoVes(precioVes) }})
+      (Bs. {{ formatoVes(precioVes) }})
     </span>
   </div>
 </template>
@@ -16,13 +16,13 @@ defineProps<{
   precioVes?: number | string | null;
 }>();
 
-// Un helper simple para formatear la moneda local
+// Helper simple para formatear el bolivar
 const formatoVes = (valor: number | string) => {
   const num = Number(valor);
   return new Intl.NumberFormat('es-VE', {
-    style: 'currency',
-    currency: 'VES',
+    style: 'decimal',
     minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(num);
 };
 </script>

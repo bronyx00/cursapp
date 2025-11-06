@@ -3,7 +3,7 @@
     <div class="container flex h-16 items-center justify-between">
       
       <RouterLink to="/" class="flex items-center gap-2">
-        <BookMarked class="h-6 w-6 text-primary" /> <span class="text-lg font-semibold">CursApp</span>
+        <span class="text-4xl font-bold tracking-tight">cursapp</span>
       </RouterLink>
 
       <nav class="flex items-center gap-2">
@@ -24,4 +24,4 @@ import { RouterLink } from 'vue-router';
 import { BookMarked } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import ThemeToggle from '@/components/shared/ThemeToggle.vue'; // Importamos el toggle
-</script>
+</script>   

@@ -9,6 +9,7 @@ from comunidad.api.viewsets import PreguntaForoViewSet, RespuestaForoViewSet
 router = DefaultRouter()
 router.register(r'catalogo', CursoViewSet, basename='curso-catalogo')
 router.register(r'cupones', CuponViewSet, basename='instructor-cupones')
+router.register(r'categorias', CategoriaViewSet, basename='curso-categorias')
 
 # Router Anidado para Módulos (curso/{pk}/modulos/)
 cursos_router = routers.NestedSimpleRouter(router, r'catalogo', lookup='curso')

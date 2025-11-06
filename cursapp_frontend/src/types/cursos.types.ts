@@ -1,3 +1,10 @@
+export interface Categoria {
+    id: number;
+    nombre: string;
+    slug: string;
+    descripcion: string;
+}
+
 export interface CursoList {
     id: number;
     titulo: string;

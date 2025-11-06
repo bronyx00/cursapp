@@ -1,6 +1,6 @@
 <template>
-  <section class="container mx-auto overflow-hidden py-16 md:py-24">
-    <div class="grid grid-cols-1 items-center gap-8 md:grid-cols-3 md:gap-16">
+  <section class="mt-10 overflow-hidden py-16 md:py-24 bg-secondary/50">
+    <div class="container mx-auto grid grid-cols-1 items-center gap-8 md:grid-cols-3 md:gap-16">
       
       <div class="max-w-xl md:col-span-1">
         <h2 class="text-3xl font-bold tracking-tighter text-foreground md:text-4xl">
@@ -16,7 +16,7 @@
           ref="scrollContainerRef"
           class="flex snap-x snap-mandatory gap-6 overflow-x-auto pb-6"
           :class="{
-            '-mr-4 pr-4 md:-mr-0 md:pr-0': true // Compensación de padding solo en móvil
+            '-mr-4 pr-4 md:-mr-0 md:pr-0': true
           }"
         >
           <template v-if="catalogStore.isLoading">
@@ -38,7 +38,10 @@
       </div>
     </div>
 
-    <div class="hidden md:flex justify-center mt-8 gap-3">
+    <div
+      v-if="!arrivedState.left || !arrivedState.right"
+      class="hidden md:flex justify-center mt-8 gap-3"
+    >
       <Button @click="scrollPrev" variant="outline" size="icon" :disabled="arrivedState.left">
         <ChevronLeft class="h-5 w-5" />
         <span class="sr-only">Anterior</span>
@@ -63,37 +66,29 @@ import VerticalCategoryCard from './VerticalCategoryCard.vue';
 const catalogStore = useCatalogStore();
 const scrollContainerRef = ref<HTMLElement | null>(null);
 
-// useScroll monitorea el contenedor
 const { arrivedState } = useScroll(scrollContainerRef, {
-  // Añadimos un offset para que los botones se desactiven
-  // justo antes de llegar al borde exacto.
   offset: { left: 10, right: 10 } 
 });
 
-// --- LÓGICA DE SCROLL CORREGIDA (Scroll de 3 en 3) ---
-
 const scrollNext = () => {
   if (!scrollContainerRef.value) return;
-  // Mover una "página" completa (el ancho visible del contenedor)
-  // que es exactamente 3 tarjetas gracias a nuestro CSS.
-  const scrollAmount = scrollContainerRef.value.clientWidth;
+  const scrollAmount = scrollContainerRef.value.clientWidth + 24;
   
   scrollContainerRef.value.scrollBy({ 
     left: scrollAmount, 
-    behavior: 'smooth' // El movimiento "sutil"
+    behavior: 'smooth'
   });
 };
 
 const scrollPrev = () => {
   if (!scrollContainerRef.value) return;
-  const scrollAmount = scrollContainerRef.value.clientWidth;
+  const scrollAmount = scrollContainerRef.value.clientWidth + 24;
   
   scrollContainerRef.value.scrollBy({ 
     left: -scrollAmount, 
-    behavior: 'smooth' // El movimiento "sutil"
+    behavior: 'smooth'
   });
 };
-// --- FIN DE LA CORRECCIÓN ---
 
 onMounted(() => {
   catalogStore.fetchCategorias();

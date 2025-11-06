@@ -1,9 +1,9 @@
 <template>
-  <header class="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur-sm">
-    <div class="container flex h-16 items-center justify-between">
+  <header class="sticky top-0 z-40 w-full border-b bg-background/90 backdrop-blur-sm">
+    <div class="container mx-auto px-8 flex h-14 items-center justify-between">
       
       <RouterLink to="/" class="flex items-center gap-2">
-        <span class="text-4xl font-bold tracking-tight">cursapp</span>
+        <span class="text-3xl font-bold tracking-[.028em] text-primary">cursa<span class="text-accent">pp</span></span>
       </RouterLink>
 
       <nav class="flex items-center gap-2">
@@ -21,7 +21,6 @@
 
 <script setup lang="ts">
 import { RouterLink } from 'vue-router';
-import { BookMarked } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import ThemeToggle from '@/components/shared/ThemeToggle.vue'; // Importamos el toggle
 </script>   

@@ -12,7 +12,7 @@
             </p>
 
             <Button size="lg" class="mt-8">
-                Explirar Cursos
+                Explorar Cursos
             </Button>
         </section>
 

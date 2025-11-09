@@ -1,8 +1,8 @@
 <template>
-  <section class="mt-10 overflow-hidden py-16 md:py-24 bg-secondary/50">
+  <section class="mt-9 overflow-hidden px-4 py-16 md:py-24 bg-secondary/40">
     <div class="container mx-auto grid grid-cols-1 items-center gap-8 md:grid-cols-3 md:gap-16">
       
-      <div class="max-w-xl md:col-span-1">
+      <div class="max-w-xl md:col-span-1 text-center md:text-left">
         <h2 class="text-3xl font-bold tracking-tighter text-foreground md:text-4xl">
           Aprende habilidades esenciales
         </h2>
@@ -15,9 +15,6 @@
         <ul
           ref="scrollContainerRef"
           class="flex snap-x snap-mandatory gap-6 overflow-x-auto pb-6"
-          :class="{
-            '-mr-4 pr-4 md:-mr-0 md:pr-0': true
-          }"
         >
           <template v-if="catalogStore.isLoading">
             <li v-for="i in 3" :key="i" class="w-3/4 flex-shrink-0 snap-start md:w-[calc((100%-48px)/3)]">
@@ -38,15 +35,24 @@
       </div>
     </div>
 
-    <div
-      v-if="!arrivedState.left || !arrivedState.right"
-      class="hidden md:flex justify-center mt-8 gap-3"
-    >
-      <Button @click="scrollPrev" variant="outline" size="icon" :disabled="arrivedState.left">
+    <div class="hidden md:flex justify-center mt-8 gap-3">
+      <Button 
+        @click="scrollPrev" 
+        variant="outline" 
+        size="icon" 
+        :disabled="arrivedState.left"
+        class="hover:bg-accent hover:text-accent-foreground"
+      >
         <ChevronLeft class="h-5 w-5" />
         <span class="sr-only">Anterior</span>
       </Button>
-      <Button @click="scrollNext" variant="outline" size="icon" :disabled="arrivedState.right">
+      <Button 
+        @click="scrollNext" 
+        variant="outline" 
+        size="icon" 
+        :disabled="arrivedState.right"
+        class="hover:bg-accent hover:text-accent-foreground"
+      >
         <ChevronRight class="h-5 w-5" />
         <span class="sr-only">Siguiente</span>
       </Button>
@@ -56,7 +62,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch, nextTick } from 'vue';
 import { useScroll } from '@vueuse/core';
 import { useCatalogStore } from '@/store/catalog.store';
 import { Button } from '@/components/ui/button';
@@ -66,7 +72,7 @@ import VerticalCategoryCard from './VerticalCategoryCard.vue';
 const catalogStore = useCatalogStore();
 const scrollContainerRef = ref<HTMLElement | null>(null);
 
-const { arrivedState } = useScroll(scrollContainerRef, {
+const { arrivedState, measure } = useScroll(scrollContainerRef, {
   offset: { left: 10, right: 10 } 
 });
 
@@ -92,6 +98,18 @@ const scrollPrev = () => {
 
 onMounted(() => {
   catalogStore.fetchCategorias();
+});
+
+// // Observamos cuando 'isLoading' cambia (especialmente de true a false)
+watch(() => catalogStore.isLoading, (isLoading) => {
+  if (isLoading === false) {
+    // Esperamos a que Vue renderice el 'v-else'
+    nextTick(() => {
+      // Forzamos a useScroll a "volver a medir" el contenedor,
+      // que ahora SÍ tiene las tarjetas.
+      measure();
+    });
+  }
 });
 </script>
 

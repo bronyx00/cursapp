@@ -2,32 +2,7 @@
     <div class="bg-background text-foreground">
         <HeroSection />
         <FeaturedCategories />
-        <section class="py-16 md:py-24">
-            <div class="container mx-auto px-4">
-                <h2 class="text-3xl md:text-4xl font-bold tracking-tight text-foreground">
-                    Cursos Populares
-                </h2>
-
-                <div v-if="catalogStore.isLoading" class="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                    <CourseCardSkeleton v-for="i in 4" :key="i" />
-                </div>
-
-                <div v-else-if="catalogStore.cursos.length > 0" class="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                    <CourseCard
-                        v-for="curso in catalogStore.cursos"
-                        :key="curso.id"
-                        :curso="curso"
-                        :progreso="'0'" 
-                        :show-progress="false"
-                        :show-price="true"
-                    />
-                </div>
-
-                <div v-else class="mt-10 text-center text-muted-foreground">
-                    <p>No se encontraron cursos en este momento.</p>
-                </div>
-            </div>
-        </section>
+        <PopularCourses />
 
         <section class="container mx-auto px-4 py-24 md:py-32">
             <div class="mx-auto max-w-3xl text-center">
@@ -49,10 +24,9 @@
 import { onMounted } from 'vue';
 import { useCatalogStore } from '@/store/catalog.store';
 import Button from '@/components/ui/button/Button.vue'
-import CourseCard from '@/components/shared/CourseCard.vue';
-import FeaturedCategories from '@/components/home/FeaturedCategories.vue';
-import CourseCardSkeleton from '@/components/shared/CourseCardSkeleton.vue'; 
+import FeaturedCategories from '@/components/home/FeaturedCategories.vue'; 
 import HeroSection from '@/components/home/HeroSection.vue';
+import PopularCourses from '@/components/home/PopularCourses.vue';
 
 const catalogStore = useCatalogStore();
 

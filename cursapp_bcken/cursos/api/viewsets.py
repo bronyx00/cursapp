@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, filters
 from django.shortcuts import get_object_or_404
 from django.db.models import Count
 from cursos.models import Curso, Modulo, Leccion, Categoria, Cupon
@@ -58,6 +58,10 @@ class CursoViewSet(viewsets.ModelViewSet):
     """
     queryset = Curso.objects.all().order_by('-fecha_creacion')
     permission_classes = [IsOwnerOrReadOnly] # Lectura pública, escritura solo para Instructores.
+    
+    filter_backends = [filters.OrderingFilter, filters.SearchFilter]
+    ordering_fields = ['fecha_creacion', 'promedio_calificacion_general', 'total_resenas']
+    search_fields = ['titulo', 'descripcion', 'instructor__username']
     
     def get_serializer_class(self):
         """Alterna entre el serializer de listado y el de detalle."""

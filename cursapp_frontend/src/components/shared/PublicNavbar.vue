@@ -17,14 +17,27 @@
       </div>
 
       <div class="flex justify-center md:flex-1 md:justify-start">
-      
-      <RouterLink to="/" class="flex items-center gap-2">
-        <span class="text-3xl font-bold tracking-[.028em] text-primary">cursapp</span>
-      </RouterLink>
+        <RouterLink to="/" class="flex items-center gap-2">
+          <span class="text-2xl font-bold tracking-tight">cursapp</span>
+        </RouterLink>
       </div>
 
       <div class="flex items-center justify-end">
         <nav class="hidden items-center gap-2 md:flex">
+
+
+          <Button variant="ghost" as-child>
+            <RouterLink to="/planes">Planes y precios</RouterLink>
+          </Button>
+          <Button variant="ghost" as-child>
+            <RouterLink to="/business">Cursapp Business</RouterLink>
+          </Button>
+          <Button variant="ghost" as-child>
+            <RouterLink to="/instructores">Enseña en Cursapp</RouterLink>
+          </Button>
+          
+
+          <Separator orientation="vertical" class="mx-2 h-6" />
           <Button variant="ghost" as-child>
             <RouterLink to="/login">Iniciar Sesión</RouterLink>
           </Button>
@@ -57,7 +70,9 @@ import { Button } from '@/components/ui/button';
 import ThemeToggle from '@/components/shared/ThemeToggle.vue';
 import { Menu, Search, ShoppingCart } from 'lucide-vue-next';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import MobileNavSheet from './MobileNavSheet.vue'; // Asumo que este es el componente de mi respuesta anterior
+import MobileNavSheet from './MobileNavSheet.vue';
+// 1. Importar el nuevo componente Separator
+import { Separator } from '@/components/ui/separator'; 
 
 const isMobileMenuOpen = ref(false);
 </script>

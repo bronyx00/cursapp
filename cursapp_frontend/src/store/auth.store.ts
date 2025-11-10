@@ -34,7 +34,16 @@ export const useAuthStore = defineStore('auth', {
                 throw error;
             }
         },
-
+        async register(userData: any) {
+            try {
+                const { data } = await apiClient.post('/auth/sign-up/', userData);
+                return data;
+            } catch (error) {
+                console.error('Error de registro:', error);
+                throw error;
+            }
+        }
+        ,
         async fetchProfile() {
             if (!this.accessToken) return;
             try {

@@ -8,9 +8,12 @@ import MarketingLayout from '@/layouts/MarketingLayout.vue';
 // Todas las páginas
 import HomePage from '@/pages/HomePage.vue';
 import LoginPage from '@/pages/LoginPage.vue';
+import RegisterPage from '@/pages/RegisterPage.vue';
 import AlumnoDashboard from '@/pages/AlumnoDashboard.vue';
 import LeaderboardPage from '@/pages/LeaderboardPage.vue';
 import type { UserRole } from '@/types/user.types';
+import AuthLayout from '@/layouts/AuthLayout.vue';
+
 
 const routes = [
     // Rutas públicas 
@@ -19,10 +22,16 @@ const routes = [
         component: MarketingLayout,
         children: [
             { path: '/', name: 'Home', component: HomePage },
-            { path: '/login', name: 'Login', component: LoginPage },
         ],
     },
-
+    {
+        path: '/',
+        component: AuthLayout,
+        children: [
+            { path: '/login', name: 'Login', component: LoginPage },
+            { path: '/register', name: 'Register', component: RegisterPage },
+        ]
+    },
     // Rutas privadas (Dashboards)
     {
         path: '/',

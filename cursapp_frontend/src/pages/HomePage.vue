@@ -3,6 +3,9 @@
         <HeroSection />
         <FeaturedCategories />
         <PopularCourses />
+        <TestimonialsSection />
+        <SocialProofLogos />
+        
 
         <section class="container mx-auto px-4 py-24 md:py-32">
             <div class="mx-auto max-w-3xl text-center">
@@ -27,6 +30,8 @@ import Button from '@/components/ui/button/Button.vue'
 import FeaturedCategories from '@/components/home/FeaturedCategories.vue'; 
 import HeroSection from '@/components/home/HeroSection.vue';
 import PopularCourses from '@/components/home/PopularCourses.vue';
+import SocialProofLogos from '@/components/home/SocialProofLogos.vue';
+import TestimonialsSection from '@/components/home/TestimonialsSection.vue';
 
 const catalogStore = useCatalogStore();
 

@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import apiClient from "@/services/apiClient";
 import type { CursoList } from '@/types/cursos.types';
+import { useAuthStore } from "./auth.store";
 
 // Tipo para la data de la API
 export interface InstructorStats {
@@ -21,7 +22,6 @@ export const useInstructorStore = defineStore('instructor', {
     actions: {
         async fetchDashboardStats() {
             if (this.stats) return; // No recargar
-
             this.isLoading = true;
             try {
                 const { data } = await apiClient.get('/evaluacion/instructor/dashboard/');
@@ -36,9 +36,21 @@ export const useInstructorStore = defineStore('instructor', {
         async fetchMisCursos() {
             if (this.misCursos.length > 0) return;
             this.isLoadingCursos = true;
+
+            const authStore = useAuthStore();
+            if (!authStore.user) {
+                console.error("Usuario no autenticado. No se pueden cargar los cursus.");
+                this.isLoadingCursos = false;
+                return;
+            }
+
+            const instructorFullName = `${authStore.user.first_name} ${authStore.user.last_name}`.trim();
+
             try {
                 const { data } = await apiClient.get('/cursos/catalogo/');
-                this.misCursos = data.results;
+                this.misCursos = data.results.filter(
+                    (curso: CursoList) => curso.instructor_nombre === instructorFullName
+                );
             } catch (error) {
                 console.error("Error al cargar cursos de instructor:", error);
             } finally {

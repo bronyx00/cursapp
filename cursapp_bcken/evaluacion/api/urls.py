@@ -6,7 +6,8 @@ from .viewsets import (
     ScormProgresoAPIView, 
     InstructorDashboardAPIView,
     MiAprendizajeViewSet,
-    PagoWebhookAPIView
+    PagoWebhookAPIView,
+    ProgresoRecienteAPIView
 )
 
 router = DefaultRouter()
@@ -26,4 +27,7 @@ urlpatterns = router.urls + [
     
     # Endpoint para Webhook de la pasarela de pagos
     path('pagos/webhook/', PagoWebhookAPIView.as_view(), name='pago-webhook'),
+    
+    # Endpoint para "Continuar Aprendiendo"
+    path('mi-progreso/continuar/', ProgresoRecienteAPIView.as_view(), name='progreso-reciente'),
 ]

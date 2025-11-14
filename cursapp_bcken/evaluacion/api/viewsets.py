@@ -6,7 +6,7 @@ from django.db.models import Sum, F, Q, DecimalField
 from django.views.decorators.csrf import csrf_exempt
 from decimal import Decimal
 from django.shortcuts import get_object_or_404
-from evaluacion.models import Inscripcion, PuntosAlumno, ProgresoLeccion, Resena, Transaccion
+from evaluacion.models import Inscripcion, PuntosAlumno, ProgresoLeccion, Resena, Transaccion, InteraccionLeccion
 from cursos.models import Curso, Leccion, Cupon
 from core.models import Usuario
 from utils.monetizacion import obtener_tasa_bcv
@@ -16,7 +16,8 @@ from .serializers import (
     LeaderboardSerializer,
     ScormProgresoSerializer,
     ResenaSerializer,
-    MiAprendizajeSerializer
+    MiAprendizajeSerializer,
+    UltimaLeccionSerializer
 )
 
 # --- PERMISOS PERSONALIZADOS ---
@@ -351,3 +352,37 @@ class PagoWebhookAPIView(APIView):
             {"error": "Datos de webhook inválidos"}, 
             status=status.HTTP_400_BAD_REQUEST
         )
+        
+class ProgresoRecienteAPIView(generics.RetrieveAPIView):
+    """
+    Endpoint para obtener la última lección con la que el usuario interactuó 
+    para la tarjeta "Continuar Aprendiendo".
+    """
+    serializer_class = UltimaLeccionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_object(self):
+        # Obtiene el usuario autenticado
+        user = self.request.user
+        
+        # Última interacción del usuario
+        ultima_interaccion = InteraccionLeccion.objects.select_related(
+            'leccion__modulo__curso'
+        ).filter(
+            alumno=user
+        ).order_by('-ultima_vista').first()
+        
+        if not ultima_interaccion:
+            # Si el usuario nunca ha interactuado con nada
+            return None
+        
+        return ultima_interaccion
+    
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance is None:
+            # Devolvemos null si el usuario es nuevo y no tiene interacciones
+            return Response(None, status=status.HTTP_200_OK)
+        
+        serializer = self.get_serializer(instance)
+        return serializer(serializer.data)

@@ -11,7 +11,7 @@
         <Input
           id="username"
           v-model="username"
-          placeholder="tu-usuario"
+          placeholder="Usuario"
           required
         />
       </div>
@@ -52,7 +52,6 @@ import { useRouter, RouterLink } from 'vue-router';
 import { useAuthStore } from '@/store/auth.store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-// Asumo que tienes 'Label' de shadcn-vue
 import { Label } from '@/components/ui/label'; 
 
 const username = ref('');
@@ -74,6 +73,8 @@ const handleLogin = async () => {
 
     if (authStore.esAlumno) {
       router.push({ name: 'MiAprendizaje' });
+    } else if (authStore.esInstructor) {
+      router.push({ name: 'InstructorDashboard' });
     } else {
       router.push({ name: 'Home' }); // Ajustar si tienes dashboard de instructor
     }

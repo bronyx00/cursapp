@@ -10,6 +10,7 @@ import HomePage from '@/pages/HomePage.vue';
 import LoginPage from '@/pages/LoginPage.vue';
 import RegisterPage from '@/pages/RegisterPage.vue';
 import AlumnoDashboard from '@/pages/AlumnoDashboard.vue';
+import InstructorDashboard from '@/pages/InstructorDashboard.vue';
 import LeaderboardPage from '@/pages/LeaderboardPage.vue';
 import type { UserRole } from '@/types/user.types';
 import AuthLayout from '@/layouts/AuthLayout.vue';
@@ -50,6 +51,12 @@ const routes = [
                 component: LeaderboardPage,
                 meta: { roles: [3] }
             },
+            {
+                path: '/instructor/dashboard',
+                name: 'InstructorDashboard',
+                component: InstructorDashboard,
+                meta: { roles: [2] } // Solo instructores
+            }
         ],
     },
 ];
@@ -86,7 +93,7 @@ router.beforeEach(async (to, from, next) => {
     if ((to.name === 'Login' || to.name === 'Home') && isAuthenticated) {
         // Redirige al dashboard correspondiente, una vez logueado
         if (userRole === 3) next({ name: 'MiAPrendizaje' });
-        // if (userRole === 2) next({ name: 'InstructorDashboard' });
+        if (userRole === 2) next({ name: 'InstructorDashboard' });
         else next({ name: 'Home' }); // Fallback
     }
 

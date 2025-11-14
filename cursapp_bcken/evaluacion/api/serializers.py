@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from evaluacion.models import Inscripcion, ProgresoLeccion, Resena
+from evaluacion.models import Inscripcion, ProgresoLeccion, Resena, InteraccionLeccion
 from core.api.serializers import PerfilUsuarioSerializer
 from cursos.api.serializers import CursoListSerializer
 from core.models import Usuario
@@ -133,4 +133,33 @@ class MiAprendizajeSerializer(serializers.ModelSerializer):
             'curso',
             'porcentaje_progreso',
             'completado'
+        )
+        
+class UltimaLeccionSerializer(serializers.ModelSerializer):
+    """
+    Serializer para mostrar la última lección interactuada por el alumno.
+    Incluye campos anidados para construir la URL en el frontend.
+    """
+    # Campos de la Lección
+    leccion_id = serializers.IntegerField(source='leccion.id')
+    leccion_titulo = serializers.CharField(source='leccion.titulo')
+    
+    # Campos del Módulo
+    modulo_id = serializers.IntegerField(source='leccion.modulo.id')
+    
+    # Campos del Curso
+    curso_id = serializers.IntegerField(source='leccion.modulo.curso.id')
+    curso_slug = serializers.CharField(source='leccion.modulo.curso.slug')
+    curso_titulo = serializers.CharField(source='leccion.modulo.curso.titulo')
+    
+    class Meta:
+        model = InteraccionLeccion
+        fields = (
+            'leccion_id',
+            'leccion_titulo',
+            'modulo_id',
+            'curso_id',
+            'curso_slug',
+            'curso_titulo',
+            'ultima_vista'
         )

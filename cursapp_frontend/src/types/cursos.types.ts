@@ -16,6 +16,7 @@ export interface CursoList {
     portada: string | null;
     precio_usd: string;
     precio_ves: string | null;
+    estado_display: string;
 }
 
 export interface MiCursoInscrito {
